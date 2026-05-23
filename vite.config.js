@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 
 export default defineConfig({
   root: '.',
+  base: process.env.GITHUB_ACTIONS ? '/-/' : './',
   build: {
     rollupOptions: {
       input: {
