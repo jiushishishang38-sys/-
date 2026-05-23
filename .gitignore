@@ -1,0 +1,28 @@
+# Dependencies and package-manager caches
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+
+# Build output
+dist/
+build/
+.vite/
+
+# Local preview and generated verification artifacts
+screenshots/
+.tools/
+*.log
+server-out.txt
+server-err.txt
+
+# Editor and OS metadata
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Environment files
+.env
+.env.*
+!.env.example

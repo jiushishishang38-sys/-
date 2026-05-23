@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>课前引导与基础光学</title>
+    <link rel="stylesheet" href="./src/styles/app.css" />
+  </head>
+  <body data-page="guide">
+    <header class="site-header">
+      <a class="brand" href="./course.html">屈光模拟实验平台</a>
+      <nav class="nav">
+        <a href="./guide.html">课前引导</a>
+        <a href="./experiment.html">3D 光具座</a>
+        <a href="./eye.html">眼球 3D</a>
+        <a href="./quiz.html">课堂检测</a>
+        <a href="./report.html">实验报告</a>
+      </nav>
+    </header>
+    <main class="page">
+      <section class="page-title">
+        <p class="eyebrow">课前引导</p>
+        <h1>从生活中的“看不清”进入屈光问题</h1>
+        <p>眼镜为什么能让远处黑板变清晰？近视和远视究竟是光聚焦在视网膜前，还是视网膜后？</p>
+      </section>
+
+      <section class="guide-carousel image2" aria-label="课前引导插图轮播">
+        <div class="carousel-head">
+          <div>
+            <h2>把生活现象转换成光路问题</h2>
+          </div>
+          <div class="carousel-controls" aria-label="轮播控制">
+            <button class="carousel-btn" type="button" data-carousel-prev aria-label="上一张">‹</button>
+            <button class="carousel-btn" type="button" data-carousel-next aria-label="下一张">›</button>
+          </div>
+        </div>
+        <div class="carousel-viewport">
+          <div class="carousel-track">
+            <article class="carousel-slide active" data-carousel-slide>
+              <div class="guide-illustration board-scene" aria-hidden="true">
+                <div class="classroom-board"><span>光线</span><span>焦点</span><span>视网膜</span></div>
+                <div class="blur-line line-a"></div>
+                <div class="blur-line line-b"></div>
+                <div class="student-eye"></div>
+              </div>
+              <div class="slide-copy">
+                <span>01</span>
+                <h3>远处黑板模糊</h3>
+                <p>把“看不清”转化为问题：平行光进入眼睛后，成像位置为什么没有落在视网膜上？</p>
+              </div>
+            </article>
+            <article class="carousel-slide" data-carousel-slide>
+              <div class="guide-illustration glasses-scene" aria-hidden="true">
+                <div class="glasses-frame"><i></i><i></i></div>
+                <div class="sharp-board"></div>
+                <div class="ray ray-one"></div>
+                <div class="ray ray-two"></div>
+                <div class="eye-focus"></div>
+              </div>
+              <div class="slide-copy">
+                <span>02</span>
+                <h3>戴眼镜后变清晰</h3>
+                <p>镜片先让光束会聚或发散，再由眼球完成成像，学生能据此判断矫正方向。</p>
+              </div>
+            </article>
+            <article class="carousel-slide" data-carousel-slide>
+              <div class="guide-illustration lens-scene" aria-hidden="true">
+                <div class="lens-pair convex-lens"></div>
+                <div class="lens-pair concave-lens"></div>
+                <div class="thickness-mark mark-left"></div>
+                <div class="thickness-mark mark-right"></div>
+              </div>
+              <div class="slide-copy">
+                <span>03</span>
+                <h3>镜片厚薄不同</h3>
+                <p>从外形比较进入概念：凸透镜中间厚、边缘薄；凹透镜中间薄、边缘厚。</p>
+              </div>
+            </article>
+            <article class="carousel-slide" data-carousel-slide>
+              <div class="guide-illustration screen-scene" aria-hidden="true">
+                <div class="phone-screen"></div>
+                <div class="near-eye"></div>
+                <div class="fatigue-wave wave-a"></div>
+                <div class="fatigue-wave wave-b"></div>
+              </div>
+              <div class="slide-copy">
+                <span>04</span>
+                <h3>看屏幕后疲劳</h3>
+                <p>物距变化会增加调节负担，引出晶状体屈光能力与眼睛疲劳之间的联系。</p>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div class="carousel-dots" role="tablist" aria-label="选择插图">
+          <button type="button" class="active" data-carousel-dot aria-label="查看远处黑板模糊" aria-selected="true"></button>
+          <button type="button" data-carousel-dot aria-label="查看戴眼镜后变清晰" aria-selected="false"></button>
+          <button type="button" data-carousel-dot aria-label="查看镜片厚薄不同" aria-selected="false"></button>
+          <button type="button" data-carousel-dot aria-label="查看看屏幕后疲劳" aria-selected="false"></button>
+        </div>
+      </section>
+
+      <section class="cards four">
+        <article><h2>远处黑板模糊</h2><p>提示学生思考：平行光进入眼睛后为什么没有落在视网膜上？</p></article>
+        <article><h2>戴眼镜后变清晰</h2><p>眼镜片先改变光束会聚或发散，再交给眼球完成成像。</p></article>
+        <article><h2>镜片厚薄不同</h2><p>凹透镜中间薄、边缘厚；凸透镜中间厚、边缘薄。</p></article>
+        <article><h2>看屏幕后疲劳</h2><p>调节能力、物距变化和晶状体屈光能力有关。</p></article>
+      </section>
+
+      <section class="split">
+        <div class="panel">
+          <h2>基础光学概念</h2>
+          <div class="concept-carousel image2" aria-label="基础光学概念模式图轮播">
+            <div class="carousel-viewport">
+              <div class="carousel-track">
+                <article class="carousel-slide concept-slide active" data-carousel-slide>
+                  <div class="concept-copy">
+                    <span>01</span>
+                    <h3>焦点</h3>
+                    <p>平行光经透镜后会聚，或反向延长相交的位置。</p>
+                  </div>
+                  <div class="concept-diagram focus-map image2" aria-hidden="true">
+                    <span class="demo-tag">概念光路演示图</span>
+                    <span class="ray-label incoming">平行入射光</span>
+                    <span class="ray-label outgoing">会聚到焦点</span>
+                    <div class="map-axis"></div>
+                    <div class="map-lens"></div>
+                    <div class="map-ray ray-top"></div>
+                    <div class="map-ray ray-mid"></div>
+                    <div class="map-ray ray-bottom"></div>
+                    <div class="map-point focus-point">F</div>
+                    <span class="diagram-note focus-note">三束平行光经透镜后相交的位置</span>
+                  </div>
+                </article>
+                <article class="carousel-slide concept-slide" data-carousel-slide>
+                  <div class="concept-copy">
+                    <span>02</span>
+                    <h3>焦距 f</h3>
+                    <p>透镜中心到焦点的距离，常用 m 或 cm 表示。</p>
+                  </div>
+                  <div class="concept-diagram focal-length-map image2" aria-hidden="true">
+                    <span class="demo-tag">概念光路演示图</span>
+                    <span class="ray-label incoming">透镜中心 O</span>
+                    <span class="ray-label outgoing">焦点 F</span>
+                    <div class="map-axis"></div>
+                    <div class="map-lens"></div>
+                    <div class="map-point lens-center">O</div>
+                    <div class="map-point focus-point">F</div>
+                    <div class="distance-line"></div>
+                    <div class="distance-label">f</div>
+                    <span class="diagram-note distance-note">O 到 F 的距离就是焦距</span>
+                  </div>
+                </article>
+                <article class="carousel-slide concept-slide" data-carousel-slide>
+                  <div class="concept-copy">
+                    <span>03</span>
+                    <h3>屈光度 φ</h3>
+                    <p>透镜焦度，φ = 1/f，f 用米表示，单位为 D。</p>
+                  </div>
+                  <div class="concept-diagram diopter-map image2" aria-hidden="true">
+                    <span class="demo-tag">概念光路演示图</span>
+                    <div class="formula-card">φ = 1 / f</div>
+                    <div class="meter-scale"><span>f = 0.5 m</span><span>φ = 2 D</span></div>
+                    <div class="power-bars"><i></i><i></i><i></i></div>
+                    <span class="diagram-note power-note">焦距越短，屈光度越大</span>
+                  </div>
+                </article>
+                <article class="carousel-slide concept-slide" data-carousel-slide>
+                  <div class="concept-copy">
+                    <span>04</span>
+                    <h3>凸透镜</h3>
+                    <p>使光线会聚，可矫正远视眼。</p>
+                  </div>
+                  <div class="concept-diagram convex-map image2" aria-hidden="true">
+                    <span class="demo-tag">概念光路演示图</span>
+                    <span class="ray-label incoming">平行入射光</span>
+                    <span class="ray-label outgoing">实焦点</span>
+                    <div class="map-axis"></div>
+                    <div class="map-lens convex-shape"></div>
+                    <div class="map-ray ray-top"></div>
+                    <div class="map-ray ray-mid"></div>
+                    <div class="map-ray ray-bottom"></div>
+                    <div class="map-point focus-point">F</div>
+                    <span class="diagram-note focus-note">凸透镜让光线会聚</span>
+                  </div>
+                </article>
+                <article class="carousel-slide concept-slide" data-carousel-slide>
+                  <div class="concept-copy">
+                    <span>05</span>
+                    <h3>凹透镜</h3>
+                    <p>使光线发散，可矫正近视眼。</p>
+                  </div>
+                  <div class="concept-diagram concave-map image2" aria-hidden="true">
+                    <span class="demo-tag">概念光路演示图</span>
+                    <span class="ray-label incoming">平行入射光</span>
+                    <span class="ray-label outgoing">发散光线</span>
+                    <div class="map-axis"></div>
+                    <div class="map-lens concave-shape"></div>
+                    <div class="map-ray diverge-top"></div>
+                    <div class="map-ray diverge-mid"></div>
+                    <div class="map-ray diverge-bottom"></div>
+                    <div class="virtual-ray virtual-top"></div>
+                    <div class="virtual-ray virtual-bottom"></div>
+                    <div class="map-point virtual-focus">F'</div>
+                    <span class="diagram-note virtual-note">反向延长线交于虚焦点</span>
+                  </div>
+                </article>
+              </div>
+            </div>
+            <div class="concept-carousel-footer">
+              <div class="carousel-dots" role="tablist" aria-label="选择基础光学概念">
+                <button type="button" class="active" data-carousel-dot aria-label="查看焦点模式图" aria-selected="true"></button>
+                <button type="button" data-carousel-dot aria-label="查看焦距模式图" aria-selected="false"></button>
+                <button type="button" data-carousel-dot aria-label="查看屈光度模式图" aria-selected="false"></button>
+                <button type="button" data-carousel-dot aria-label="查看凸透镜模式图" aria-selected="false"></button>
+                <button type="button" data-carousel-dot aria-label="查看凹透镜模式图" aria-selected="false"></button>
+              </div>
+              <div class="carousel-controls" aria-label="基础概念轮播控制">
+                <button class="carousel-btn" type="button" data-carousel-prev aria-label="上一条概念">‹</button>
+                <button class="carousel-btn" type="button" data-carousel-next aria-label="下一条概念">›</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>轻量光路模拟</h2>
+          <canvas id="mini-optics" width="640" height="300"></canvas>
+          <div class="controls compact">
+            <label>透镜类型
+              <select id="mini-type">
+                <option value="convex">凸透镜</option>
+                <option value="concave">凹透镜</option>
+              </select>
+            </label>
+            <label>焦距 <input id="mini-focal" type="range" min="12" max="38" value="24" /></label>
+          </div>
+          <button class="button primary" id="open-guide-quiz">完成概念小测</button>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal" id="guide-modal" aria-hidden="true">
+      <div class="modal-card">
+        <button class="icon-close" data-close-modal aria-label="关闭">×</button>
+        <h2>概念小测</h2>
+        <div class="quick-question" data-answer="b">
+          <p>近视眼常用哪种镜片矫正？</p>
+          <button data-choice="a">凸透镜</button>
+          <button data-choice="b">凹透镜</button>
+          <button data-choice="c">平面镜</button>
+          <small></small>
+        </div>
+        <div class="quick-question" data-answer="a">
+          <p>凸透镜对平行光的主要作用是？</p>
+          <button data-choice="a">会聚</button>
+          <button data-choice="b">发散</button>
+          <button data-choice="c">完全反射</button>
+          <small></small>
+        </div>
+        <a class="button primary" href="./experiment.html">进入 3D 实验</a>
+      </div>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+    <script type="module" src="./src/pages/guide.js?v=concept-optics-demo"></script>
+  </body>
+</html>

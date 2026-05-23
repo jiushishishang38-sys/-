@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>课堂检测</title>
+    <link rel="stylesheet" href="./src/styles/app.css" />
+  </head>
+  <body data-page="quiz">
+    <header class="site-header">
+      <a class="brand" href="./course.html">屈光模拟实验平台</a>
+      <nav class="nav">
+        <a href="./guide.html">课前引导</a>
+        <a href="./experiment.html">3D 光具座</a>
+        <a href="./eye.html">眼球 3D</a>
+        <a href="./quiz.html">课堂检测</a>
+        <a href="./report.html">实验报告</a>
+      </nav>
+    </header>
+    <main class="page">
+      <section class="page-title">
+        <p class="eyebrow">即时反馈</p>
+        <h1>课堂检测</h1>
+        <p>围绕焦点位置、镜片选择、散光矫正和实验数据处理进行检测。</p>
+      </section>
+      <section class="quiz-shell" aria-label="逐题课堂检测">
+        <div class="quiz-status" aria-live="polite">
+          <span id="quiz-step-label">第 1 / 4 题</span>
+          <div class="quiz-progress" aria-hidden="true"><i></i></div>
+        </div>
+
+        <article class="quiz-step active" data-answer="b" data-explain="近视眼的等效屈光能力偏强，远处平行光会在到达视网膜之前先会聚，因此成像通常落在视网膜前。">
+          <p class="question-count">01</p>
+          <h2>平行光进入近视眼后通常成像在哪里？</h2>
+          <div class="quiz-options">
+            <button type="button" data-choice="a">视网膜后</button>
+            <button type="button" data-choice="b">视网膜前</button>
+            <button type="button" data-choice="c">正好在视网膜上</button>
+          </div>
+        </article>
+
+        <article class="quiz-step" data-answer="a" data-explain="近视眼需要先让入射光适度发散，使眼球会聚后的焦点后移到视网膜上，因此应选择凹透镜。">
+          <p class="question-count">02</p>
+          <h2>矫正近视眼应选择哪类镜片？</h2>
+          <div class="quiz-options">
+            <button type="button" data-choice="a">凹透镜</button>
+            <button type="button" data-choice="b">凸透镜</button>
+            <button type="button" data-choice="c">柱面凸镜即可</button>
+          </div>
+        </article>
+
+        <article class="quiz-step" data-answer="b" data-explain="若测得的成像距离 fₓ 大于正视参考 fD，说明系统会聚能力不足，焦点偏后，更接近远视眼模型。">
+          <p class="question-count">03</p>
+          <h2>若 f<sub>x</sub> 大于 f<sub>D</sub>，该模拟眼更接近哪类？</h2>
+          <div class="quiz-options">
+            <button type="button" data-choice="a">近视眼</button>
+            <button type="button" data-choice="b">远视眼</button>
+            <button type="button" data-choice="c">正视眼</button>
+          </div>
+        </article>
+
+        <article class="quiz-step" data-answer="c" data-explain="散光的关键是不同方向屈光能力不同，矫正时要调节柱面透镜主轴方向，使对应方向的光线重新形成清晰像。">
+          <p class="question-count">04</p>
+          <h2>散光矫正实验中需要调节什么？</h2>
+          <div class="quiz-options">
+            <button type="button" data-choice="a">只移动光源</button>
+            <button type="button" data-choice="b">只增大光屏</button>
+            <button type="button" data-choice="c">柱面透镜主轴方向</button>
+          </div>
+        </article>
+
+        <section class="quiz-result" hidden>
+          <p class="eyebrow">答题解析</p>
+          <h2 id="quiz-score">本次得分</h2>
+          <div class="analysis-list" id="analysis-list"></div>
+          <div class="quiz-actions">
+            <button class="button primary" type="button" id="restart-quiz">重新答题</button>
+            <a class="button" href="./experiment.html">返回实验</a>
+          </div>
+        </section>
+
+        <div class="quiz-actions">
+          <button type="button" id="prev-question">上一题</button>
+          <button class="button primary" type="button" id="next-question" disabled>下一题</button>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="./src/main.js"></script>
+    <script type="module" src="./src/pages/quiz.js"></script>
+  </body>
+</html>

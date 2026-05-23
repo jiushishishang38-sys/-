@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>眼球 3D 结构模型</title>
+    <link rel="stylesheet" href="./src/styles/app.css" />
+  </head>
+  <body data-page="eye">
+    <header class="site-header">
+      <a class="brand" href="./course.html">屈光模拟实验平台</a>
+      <nav class="nav">
+        <a href="./guide.html">课前引导</a>
+        <a href="./experiment.html">3D 光具座</a>
+        <a href="./eye.html">眼球 3D</a>
+        <a href="./quiz.html">课堂检测</a>
+        <a href="./report.html">实验报告</a>
+      </nav>
+    </header>
+    <main class="lab-layout eye-layout">
+      <section class="lab-stage">
+        <div class="stage-head">
+          <div>
+            <p class="eyebrow">结构剖面与光路观察</p>
+            <h1>眼球 3D 结构模型</h1>
+          </div>
+          <div class="view-buttons">
+            <button data-eye-action="section">剖面结构</button>
+            <button data-eye-action="whole">整体观察</button>
+            <button data-eye-action="explode">结构拆解</button>
+            <button data-eye-action="rays">屈光路径</button>
+            <button data-eye-action="reset">复位</button>
+          </div>
+        </div>
+        <div id="eye-canvas" class="three-canvas"></div>
+      </section>
+      <aside class="lab-panel">
+        <h2>结构指示</h2>
+        <p id="eye-info">点击模型中的角膜、虹膜、瞳孔、晶状体、玻璃体、视网膜或视神经，可查看对应说明。</p>
+        <div class="legend">
+          <span><i style="background:#7de7ff"></i>角膜</span>
+          <span><i style="background:#ffd36b"></i>晶状体</span>
+          <span><i style="background:#89a7ff"></i>玻璃体</span>
+          <span><i style="background:#ff7a91"></i>视网膜</span>
+        </div>
+      </aside>
+    </main>
+    <script type="module" src="./src/main.js"></script>
+    <script type="module" src="./src/pages/eye-detailed.js"></script>
+  </body>
+</html>

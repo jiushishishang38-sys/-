@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D 光具座模拟实验</title>
+    <link rel="stylesheet" href="./src/styles/app.css" />
+  </head>
+  <body data-page="experiment">
+    <header class="site-header">
+      <a class="brand" href="./course.html">屈光模拟实验平台</a>
+      <nav class="nav">
+        <a href="./guide.html">课前引导</a>
+        <a href="./experiment.html">3D 光具座</a>
+        <a href="./eye.html">眼球 3D</a>
+        <a href="./quiz.html">课堂检测</a>
+        <a href="./report.html">实验报告</a>
+      </nav>
+    </header>
+    <main class="lab-layout">
+      <section class="lab-stage">
+        <div class="stage-head">
+          <div>
+            <p class="eyebrow">教材实验流程</p>
+            <h1>模拟眼屈光不正及其矫正</h1>
+          </div>
+          <div class="view-buttons">
+            <button data-view="front">正视</button>
+            <button data-view="side">侧视</button>
+            <button data-view="top">俯视</button>
+            <button data-view="teach">教学</button>
+            <button data-view="reset">复位</button>
+          </div>
+        </div>
+        <div id="experiment-canvas" class="three-canvas">
+          <div class="ray-sim-card" aria-label="实时成像光路演示">
+            <div class="ray-sim-head">
+              <span>实时成像光路</span>
+              <output id="ray-sim-result">像距 -- cm</output>
+            </div>
+            <canvas id="ray-sim-canvas" width="720" height="280"></canvas>
+            <label class="ray-focal-control">焦距 f
+              <input id="ray-focal" type="range" min="6" max="28" step="0.5" value="12" />
+            </label>
+          </div>
+        </div>
+        <p class="hint">拖动画面中的器材可沿光具座移动；也可使用右侧参数面板精确调节。</p>
+      </section>
+
+      <aside class="lab-panel">
+        <h2>实验控制</h2>
+        <label>实验模式
+          <select id="mode">
+            <option value="measure">测定模拟眼焦距</option>
+            <option value="correct">屈光不正矫正</option>
+            <option value="astig">散光矫正</option>
+          </select>
+        </label>
+        <label>模拟眼
+          <select id="eye-id">
+            <option>A</option><option>B</option><option>C</option><option selected>D</option>
+            <option>E</option><option>F</option><option>G</option><option>S</option>
+          </select>
+        </label>
+        <label>像屏位置 cm <input id="screen-pos" type="range" min="14" max="36" value="24" /></label>
+        <label>双凸透镜位置 cm <input id="collimator-pos" type="range" min="-24" max="-6" value="-14" /></label>
+        <label>物屏位置 cm <input id="object-pos" type="range" min="-34" max="-12" value="-24" /></label>
+        <label>矫正镜片
+          <select id="lens-type">
+            <option value="none">不加入</option>
+            <option value="concave">凹透镜</option>
+            <option value="convex">凸透镜</option>
+          </select>
+        </label>
+        <label>镜片焦度 D <input id="lens-power" type="range" min="-8" max="8" step="0.25" value="0" /></label>
+        <label>柱面镜角度 <input id="cylinder-angle" type="range" min="0" max="180" value="20" /></label>
+        <div class="readout" id="readout"></div>
+        <button class="button primary" id="record-measurement">记录本次焦距</button>
+        <button class="button" id="auto-correct">自动选择矫正镜片</button>
+        <button class="button" id="save-report">保存到实验报告</button>
+      </aside>
+    </main>
+    <section class="data-section">
+      <div class="section-head">
+        <h2>表 3-15-1 模拟眼屈光不正及其矫正</h2>
+        <a class="button" href="./report.html">查看实验报告</a>
+      </div>
+      <div class="table-wrap">
+        <table id="experiment-table"></table>
+      </div>
+    </section>
+    <script type="module" src="./src/main.js"></script>
+    <script type="module" src="./src/pages/experiment.js?v=ray-sim-overlay-2"></script>
+  </body>
+</html>

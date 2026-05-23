@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>实验报告</title>
+    <link rel="stylesheet" href="./src/styles/app.css" />
+  </head>
+  <body data-page="report">
+    <header class="site-header no-print">
+      <a class="brand" href="./course.html">屈光模拟实验平台</a>
+      <nav class="nav">
+        <a href="./guide.html">课前引导</a>
+        <a href="./experiment.html">3D 光具座</a>
+        <a href="./eye.html">眼球 3D</a>
+        <a href="./quiz.html">课堂检测</a>
+        <a href="./report.html">实验报告</a>
+      </nav>
+    </header>
+    <main class="report-page">
+      <section class="report-sheet" id="print-area">
+        <h1>用模拟的方法研究眼睛的屈光不正及其矫正实验报告</h1>
+        <div class="report-meta">
+          <label>姓名 <input /></label>
+          <label>班级 <input /></label>
+          <label>日期 <input type="date" /></label>
+        </div>
+        <h2>一、实验目的</h2>
+        <textarea>通过模拟眼实验理解眼睛成像的光学原理，掌握近视、远视、散光及其矫正方法。</textarea>
+        <h2>二、实验数据记录</h2>
+        <div class="table-wrap"><table id="report-table"></table></div>
+        <h2>三、现象观察</h2>
+        <textarea placeholder="记录像屏清晰位置、焦点前后变化、镜片矫正效果等。"></textarea>
+        <h2>四、结论与反思</h2>
+        <textarea placeholder="说明 A-G 模拟眼的屈光性质，以及矫正镜片焦度计算值与实配值的差异原因。"></textarea>
+        <div class="report-section-head">
+          <h2>五、思考题</h2>
+          <span class="editable-badge no-print">可编辑</span>
+        </div>
+        <div class="editable-questions">
+          <label class="question-item">
+            <span>1. 常见眼睛屈光不正有几类？如何矫正？</span>
+            <textarea class="answer-field" data-report-draft="thinking-1" placeholder="在此填写你的分析与结论。"></textarea>
+          </label>
+          <label class="question-item">
+            <span>2. 如果以 D 为正视眼，如何判断 A、B、C、E、F、G 的屈光不正类型？</span>
+            <textarea class="answer-field" data-report-draft="thinking-2" placeholder="可结合焦距平均值与视网膜位置作答。"></textarea>
+          </label>
+          <label class="question-item">
+            <span>3. 为什么矫正镜片焦度的计算值与实配值可能不同？</span>
+            <textarea class="answer-field" data-report-draft="thinking-3" placeholder="可从测量误差、器材位置和模型简化等角度说明。"></textarea>
+          </label>
+          <label class="question-item">
+            <span>4. 如何验证光经透镜后近似为平行光？</span>
+            <textarea class="answer-field" data-report-draft="thinking-4" placeholder="写出你的验证方法和判断依据。"></textarea>
+          </label>
+        </div>
+      </section>
+      <div class="report-actions no-print">
+        <button class="button primary" id="print-report">打印 / 保存为 PDF</button>
+        <a class="button" href="./experiment.html">返回实验</a>
+      </div>
+    </main>
+    <script type="module" src="./src/main.js"></script>
+    <script type="module" src="./src/pages/report.js"></script>
+  </body>
+</html>
