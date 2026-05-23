@@ -32,17 +32,16 @@
             <button data-view="reset">复位</button>
           </div>
         </div>
-        <div id="experiment-canvas" class="three-canvas">
-          <div class="ray-sim-card" aria-label="实时成像光路演示">
-            <div class="ray-sim-head">
-              <span>实时成像光路</span>
-              <output id="ray-sim-result">像距 -- cm</output>
-            </div>
-            <canvas id="ray-sim-canvas" width="720" height="280"></canvas>
-            <label class="ray-focal-control">焦距 f
-              <input id="ray-focal" type="range" min="6" max="28" step="0.5" value="12" />
-            </label>
+        <div id="experiment-canvas" class="three-canvas"></div>
+        <div class="ray-sim-card" aria-label="实时成像光路演示">
+          <div class="ray-sim-head">
+            <span>实时成像光路</span>
+            <output id="ray-sim-result">像距 -- cm</output>
           </div>
+          <canvas id="ray-sim-canvas" width="720" height="280"></canvas>
+          <label class="ray-focal-control">焦距 f
+            <input id="ray-focal" type="range" min="6" max="28" step="0.5" value="12" />
+          </label>
         </div>
         <p class="hint">拖动画面中的器材可沿光具座移动；也可使用右侧参数面板精确调节。</p>
       </section>

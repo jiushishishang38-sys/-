@@ -23,6 +23,18 @@ function resizeTextarea(textarea) {
 }
 
 const draft = loadDraft();
+const reportDateInput = document.getElementById('report-date');
+
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+if (reportDateInput && !reportDateInput.value) {
+  reportDateInput.value = formatLocalDate(new Date());
+}
 
 document.querySelectorAll('[data-report-draft]').forEach((field) => {
   const key = field.dataset.reportDraft;

@@ -1282,17 +1282,13 @@ textarea {
 }
 
 .ray-sim-card {
-  position: absolute;
-  left: 14px;
-  bottom: 14px;
-  z-index: 3;
-  width: min(520px, calc(100% - 28px));
-  padding: 10px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
   border: 1px solid rgba(22, 135, 167, 0.22);
   border-radius: 8px;
-  background: rgba(248, 252, 254, 0.82);
-  box-shadow: 0 14px 34px rgba(35, 58, 76, 0.16);
-  backdrop-filter: blur(14px);
+  background: rgba(248, 252, 254, 0.94);
+  box-shadow: var(--shadow-soft);
 }
 
 .ray-sim-head {
@@ -1314,7 +1310,7 @@ textarea {
 #ray-sim-canvas {
   display: block;
   width: 100%;
-  height: 180px;
+  height: clamp(180px, 26vh, 260px);
   border: 1px solid rgba(55, 84, 104, 0.16);
   border-radius: 6px;
   background:
@@ -1378,6 +1374,42 @@ textarea {
 }
 
 .readout strong {
+  color: var(--ink);
+}
+
+.eye-info-card {
+  display: grid;
+  gap: 8px;
+  min-height: 156px;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid rgba(22, 135, 167, 0.18);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f8fcfe 0%, #eef8fb 100%);
+  color: var(--muted);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.eye-info-eyebrow {
+  color: var(--cyan);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.eye-info-card h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 20px;
+  line-height: 1.15;
+}
+
+.eye-info-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.eye-info-card strong {
   color: var(--ink);
 }
 
@@ -1776,7 +1808,7 @@ td:last-child {
   }
 
   .ray-sim-card {
-    width: min(460px, calc(100% - 24px));
+    padding: 10px;
   }
 }
 
@@ -1897,10 +1929,6 @@ td:last-child {
   }
 
   .ray-sim-card {
-    left: 10px;
-    right: 10px;
-    bottom: 10px;
-    width: auto;
     padding: 8px;
   }
 

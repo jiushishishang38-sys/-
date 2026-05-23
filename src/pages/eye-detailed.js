@@ -35,17 +35,104 @@ const clickable = [];
 const rayLines = [];
 let modelMode = 'whole';
 let showRays = false;
+let activePartId = '';
+let lockedPartId = '';
 
-const descriptions = {
-  cornea: '角膜：眼球最前方的透明曲面，是屈光系统的第一道界面。',
-  iris: '虹膜：调节瞳孔大小，控制进入眼内的光量。',
-  pupil: '瞳孔：光线进入眼内的通道。',
-  lens: '晶状体：可调节焦距，使近处和远处物体在视网膜上成像。',
-  vitreous: '玻璃体：填充眼球后部，支撑眼球形态并保持透明光路。',
-  retina: '视网膜：感光神经层，将光信号转化为神经信号。',
-  sclera: '巩膜：坚韧的外层组织，保护眼球内部结构。',
-  opticNerve: '视神经：将视觉信号传向大脑视觉中枢。'
+const partDetails = {
+  cornea: {
+    name: '角膜',
+    function: '眼球最前方的透明曲面，是光线进入眼内后的第一道屈光界面。',
+    role: '提供主要屈光力，并与泪膜一起形成清晰、稳定的入射光路。'
+  },
+  iris: {
+    name: '虹膜',
+    function: '含有环形和放射状肌肉，负责改变瞳孔大小。',
+    role: '根据环境亮度调节入眼光量，保护视网膜并改善成像质量。'
+  },
+  pupil: {
+    name: '瞳孔',
+    function: '位于虹膜中央，是光线进入眼内的开口。',
+    role: '限制光束直径，影响景深、亮度和像差。'
+  },
+  lens: {
+    name: '晶状体',
+    function: '透明且有弹性的双凸透镜，可通过睫状肌调节形状。',
+    role: '改变焦距，使近处和远处物体都能在视网膜附近成像。'
+  },
+  vitreous: {
+    name: '玻璃体',
+    function: '填充晶状体后方的大部分眼内空间，呈透明凝胶状。',
+    role: '维持眼球形态，并为光线到达视网膜提供透明通道。'
+  },
+  retina: {
+    name: '视网膜',
+    function: '眼球后部的感光神经层，含视杆和视锥细胞。',
+    role: '接收成像光斑并将光信号转化为神经信号。'
+  },
+  sclera: {
+    name: '巩膜',
+    function: '眼球坚韧的白色外层，包围和保护内部组织。',
+    role: '提供机械支撑，也是眼外肌附着并控制眼球运动的结构基础。'
+  },
+  opticNerve: {
+    name: '视神经',
+    function: '由视网膜神经节细胞轴突汇集而成。',
+    role: '把视网膜形成的视觉信号传向大脑视觉中枢。'
+  }
 };
+
+const modeDetails = {
+  whole: {
+    title: '整体观察模式',
+    body: '各结构按眼球解剖位置组装，可观察角膜、晶状体、玻璃体、视网膜与视神经的空间关系。'
+  },
+  section: {
+    title: '剖面结构模式',
+    body: '外层巩膜、视网膜与内部屈光介质叠加显示，便于观察光路穿过眼球的位置。'
+  },
+  explode: {
+    title: '结构拆解模式',
+    body: '角膜、虹膜、瞳孔、晶状体、玻璃体、视网膜、巩膜和视神经沿光路展开。'
+  }
+};
+
+function createInfoLine(label, text) {
+  const row = document.createElement('p');
+  const strong = document.createElement('strong');
+  strong.textContent = label;
+  row.append(strong, document.createTextNode(text));
+  return row;
+}
+
+function renderModeInfo() {
+  const detail = modeDetails[modelMode] || modeDetails.whole;
+  info.replaceChildren();
+  const eyebrow = document.createElement('span');
+  eyebrow.className = 'eye-info-eyebrow';
+  eyebrow.textContent = '当前视图';
+  const title = document.createElement('h3');
+  title.textContent = detail.title;
+  const body = document.createElement('p');
+  body.textContent = detail.body;
+  info.append(eyebrow, title, body);
+}
+
+function renderPartInfo(record, locked = false) {
+  const detail = partDetails[record.id];
+  if (!detail) return;
+  info.replaceChildren();
+  const eyebrow = document.createElement('span');
+  eyebrow.className = 'eye-info-eyebrow';
+  eyebrow.textContent = locked ? '已锁定结构' : '当前结构';
+  const title = document.createElement('h3');
+  title.textContent = detail.name;
+  info.append(
+    eyebrow,
+    title,
+    createInfoLine('功能：', detail.function),
+    createInfoLine('作用：', detail.role)
+  );
+}
 
 function addLabBackdrop() {
   const wall = new THREE.Mesh(
@@ -298,13 +385,9 @@ function setCameraForMode(nextMode) {
 
 function setMode(nextMode) {
   modelMode = nextMode;
-  if (nextMode === 'section') {
-    info.textContent = '剖面结构模式：外层巩膜、视网膜与内部屈光介质叠加显示，便于观察光路穿过眼球的位置。';
-  } else if (nextMode === 'explode') {
-    info.textContent = '结构拆解模式：角膜、虹膜、瞳孔、晶状体、玻璃体、视网膜、巩膜和视神经沿光路展开。';
-  } else {
-    info.textContent = '整体观察模式：各结构按眼球解剖位置组装，可点击部件查看说明。';
-  }
+  lockedPartId = '';
+  activePartId = '';
+  renderModeInfo();
   setCameraForMode(nextMode);
 }
 
@@ -317,15 +400,29 @@ function targetFor(record) {
 function applyState() {
   parts.forEach((record) => {
     record.group.position.lerp(targetFor(record), 0.12);
+    const scale = record.id === activePartId ? 1.045 : 1;
+    record.group.scale.lerp(new THREE.Vector3(scale, scale, scale), 0.16);
   });
 }
 
 document.querySelectorAll('[data-eye-action]').forEach((button) => {
   button.addEventListener('click', () => {
     const action = button.dataset.eyeAction;
-    if (action === 'whole') setMode('whole');
-    if (action === 'section') setMode('section');
-    if (action === 'explode') setMode('explode');
+    if (action === 'whole') {
+      showRays = false;
+      updateRays();
+      setMode('whole');
+    }
+    if (action === 'section') {
+      showRays = false;
+      updateRays();
+      setMode('section');
+    }
+    if (action === 'explode') {
+      showRays = false;
+      updateRays();
+      setMode('explode');
+    }
     if (action === 'rays') {
       showRays = !showRays;
       updateRays();
@@ -340,14 +437,61 @@ document.querySelectorAll('[data-eye-action]').forEach((button) => {
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
-renderer.domElement.addEventListener('click', (event) => {
+
+function setMaterialHighlight(mesh, active) {
+  const material = mesh.material;
+  if (!material?.emissive) return;
+  if (mesh.userData.baseEmissive === undefined) {
+    mesh.userData.baseEmissive = material.emissive.getHex();
+    mesh.userData.baseEmissiveIntensity = material.emissiveIntensity || 0;
+  }
+  material.emissive.setHex(active ? 0x1687a7 : mesh.userData.baseEmissive);
+  material.emissiveIntensity = active ? 0.24 : mesh.userData.baseEmissiveIntensity;
+}
+
+function setActivePart(record, locked = false) {
+  if (activePartId === (record?.id || '') && !locked) return;
+  if (activePartId) {
+    const previous = parts.get(activePartId);
+    previous?.group.traverse((child) => {
+      if (child.isMesh) setMaterialHighlight(child, false);
+    });
+  }
+  activePartId = record?.id || '';
+  if (!record) {
+    renderModeInfo();
+    return;
+  }
+  record.group.traverse((child) => {
+    if (child.isMesh) setMaterialHighlight(child, true);
+  });
+  renderPartInfo(record, locked);
+}
+
+function pickPart(event) {
   const rect = renderer.domElement.getBoundingClientRect();
   pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   pointer.y = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
   raycaster.setFromCamera(pointer, camera);
-  const hit = raycaster.intersectObjects(clickable, false)[0];
-  const record = hit?.object.userData.partRecord;
-  if (record) info.textContent = descriptions[record.id] || record.name;
+  const hits = raycaster.intersectObjects(clickable, false);
+  return hits.find((hit) => hit.object.userData.partRecord)?.object.userData.partRecord || null;
+}
+
+renderer.domElement.addEventListener('pointermove', (event) => {
+  const record = pickPart(event);
+  renderer.domElement.style.cursor = record ? 'pointer' : 'grab';
+  if (!lockedPartId) setActivePart(record);
+});
+
+renderer.domElement.addEventListener('pointerleave', () => {
+  renderer.domElement.style.cursor = 'grab';
+  if (!lockedPartId) setActivePart(null);
+});
+
+renderer.domElement.addEventListener('click', (event) => {
+  const record = pickPart(event);
+  lockedPartId = record?.id || '';
+  setActivePart(record, Boolean(record));
 });
 
 function resize() {

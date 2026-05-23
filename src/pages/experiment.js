@@ -55,8 +55,6 @@ scene.add(new THREE.HemisphereLight(0xffffff, 0xcad8e2, 1.05));
 
 const draggable = [];
 const componentMap = new Map();
-let correctionLensMesh = null;
-let correctionGeometryKey = '';
 let rayLines = [];
 let lastExperimentKey = '';
 let rayObjectDrag = false;
@@ -572,21 +570,6 @@ function buildScene() {
   const slot = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.7, 1.05), makeMat(0xb9c7d1, { metalness: 0.18 }));
   makeMount('slot', '槽板', -0.2, slot);
 
-  correctionLensMesh = makeLens(false, 0xffc75e);
-  makeMount('correction', '矫正镜片', -1.35, correctionLensMesh);
-
-  const eyeGroup = new THREE.Group();
-  const eyeShell = new THREE.Mesh(new THREE.SphereGeometry(0.88, 48, 28, 0, Math.PI * 1.7), makeMat(0xf4efe5, { transparent: true, opacity: 0.26 }));
-  eyeShell.scale.set(1.2, 0.78, 0.78);
-  const eyeLens = makeLens(true, 0xffc75e);
-  eyeLens.scale.set(0.55, 0.48, 0.55);
-  eyeLens.position.x = -0.36;
-  const retina = new THREE.Mesh(new THREE.TorusGeometry(0.46, 0.025, 10, 40), makeMat(0xc95d6b));
-  retina.rotation.y = Math.PI / 2;
-  retina.position.x = 0.66;
-  eyeGroup.add(eyeShell, eyeLens, retina);
-  makeMount('eye', '模拟眼', 0, eyeGroup);
-
   const screen = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.9, 1.25), makeMat(0xffffff, { transparent: true, opacity: 0.84 }));
   makeMount('screen', '像屏', cmToX(Number(screenInput.value)), screen);
 }
@@ -641,17 +624,6 @@ function setComponentPositions(state) {
   componentMap.get('object').position.x = cmToX(state.objectCm);
   componentMap.get('collimator').position.x = cmToX(state.collimatorCm);
   componentMap.get('screen').position.x = cmToX(state.screenCm);
-  const correction = componentMap.get('correction');
-  correction.visible = state.lensType !== 'none' || state.mode === 'correct';
-  const geometryKey = state.lensType === 'concave' ? 'concave' : 'convex';
-  if (geometryKey !== correctionGeometryKey) {
-    correctionLensMesh.geometry.dispose();
-    const replacement = makeLens(state.lensType !== 'concave', state.lensType === 'concave' ? 0xffc75e : 0x69c7d8);
-    correctionLensMesh.geometry = replacement.geometry;
-    correctionLensMesh.material.dispose();
-    correctionLensMesh.material = replacement.material;
-    correctionGeometryKey = geometryKey;
-  }
 }
 
 function updateExperiment(force = false) {
