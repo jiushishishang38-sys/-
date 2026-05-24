@@ -32,7 +32,31 @@
             <button data-view="reset">复位</button>
           </div>
         </div>
-        <div id="experiment-canvas" class="three-canvas"></div>
+        <div class="equipment-canvas-layout">
+          <div class="equipment-overlay" aria-label="器材总览">
+            <div class="equipment-item">
+              <span class="equipment-thumb source-thumb" aria-hidden="true"><i></i></span>
+              <span class="equipment-name">光源</span>
+            </div>
+            <div class="equipment-item">
+              <span class="equipment-thumb object-thumb" aria-hidden="true"><i></i></span>
+              <span class="equipment-name">物屏</span>
+            </div>
+            <div class="equipment-item">
+              <span class="equipment-thumb lens-thumb" aria-hidden="true"><i></i></span>
+              <span class="equipment-name">双凸透镜</span>
+            </div>
+            <div class="equipment-item">
+              <span class="equipment-thumb support-thumb" aria-hidden="true"><i></i></span>
+              <span class="equipment-name">镜片支架</span>
+            </div>
+            <div class="equipment-item">
+              <span class="equipment-thumb screen-thumb" aria-hidden="true"><i></i></span>
+              <span class="equipment-name">像屏</span>
+            </div>
+          </div>
+          <div id="experiment-canvas" class="three-canvas"></div>
+        </div>
         <div class="ray-sim-card" aria-label="实时成像光路演示">
           <div class="ray-sim-head">
             <span>实时成像光路</span>
@@ -61,9 +85,18 @@
             <option>E</option><option>F</option><option>G</option><option>S</option>
           </select>
         </label>
-        <label>像屏位置 cm <input id="screen-pos" type="range" min="14" max="36" value="24" /></label>
-        <label>双凸透镜位置 cm <input id="collimator-pos" type="range" min="-24" max="-6" value="-14" /></label>
-        <label>物屏位置 cm <input id="object-pos" type="range" min="-34" max="-12" value="-24" /></label>
+        <label>
+          <span class="range-label-row"><span>像屏位置</span><output id="screen-pos-value">24.00 cm</output></span>
+          <input id="screen-pos" type="range" min="14" max="36" step="0.25" value="24" />
+        </label>
+        <label>
+          <span class="range-label-row"><span>双凸透镜位置</span><output id="collimator-pos-value">-14.00 cm</output></span>
+          <input id="collimator-pos" type="range" min="-24" max="-6" step="0.25" value="-14" />
+        </label>
+        <label>
+          <span class="range-label-row"><span>物屏位置</span><output id="object-pos-value">-24.00 cm</output></span>
+          <input id="object-pos" type="range" min="-34" max="-12" step="0.25" value="-24" />
+        </label>
         <label>矫正镜片
           <select id="lens-type">
             <option value="none">不加入</option>
@@ -89,6 +122,6 @@
       </div>
     </section>
     <script type="module" src="./src/main.js"></script>
-    <script type="module" src="./src/pages/experiment.js?v=ray-sim-overlay-2"></script>
+    <script type="module" src="./src/pages/experiment.js?v=data-edit-1"></script>
   </body>
 </html>

@@ -1,12 +1,39 @@
 import * as THREE from '../vendor/three.module.js';
 import { OrbitControls } from '../vendor/OrbitControls.js';
 import {
+  BENCH_RISER_Y,
+  BENCH_RULER_Y,
+  BENCH_RULER_TILT_RADIANS,
+  DRAG_PICK_AREA_DEPTH,
+  DRAG_PICK_AREA_HEIGHT,
+  DRAG_PICK_AREA_WIDTH,
+  DRAG_PICK_AREA_Y,
+  DRAG_PICK_AREA_Z,
+  MOUNT_BASE_DEPTH,
+  MOUNT_BASE_HEIGHT,
+  MOUNT_POST_HEIGHT,
+  MOUNT_POST_Z,
+  RULER_MAX_CM,
+  RULER_MIN_CM,
+  RULER_LABEL_Y,
+  RULER_TICK_START_Y,
+  clamp,
+  cmToX,
+  formatRailPosition,
+  getRulerTickMarks,
+  railXToSnappedCm,
+  selectDragTargetFromHits,
+  snapRailCm
+} from './experiment-interaction.js';
+import {
+  clearRowData,
   EYES,
   evaluateExperiment,
   loadRows,
   renderDataTable,
   saveRows,
   traceTeachingRays,
+  updateRowData,
   updateRowWithMeasurement
 } from '../optics.js';
 
@@ -16,6 +43,9 @@ const eyeInput = document.getElementById('eye-id');
 const screenInput = document.getElementById('screen-pos');
 const collimatorInput = document.getElementById('collimator-pos');
 const objectInput = document.getElementById('object-pos');
+const screenValue = document.getElementById('screen-pos-value');
+const collimatorValue = document.getElementById('collimator-pos-value');
+const objectValue = document.getElementById('object-pos-value');
 const lensTypeInput = document.getElementById('lens-type');
 const lensPowerInput = document.getElementById('lens-power');
 const cylinderInput = document.getElementById('cylinder-angle');
@@ -27,7 +57,13 @@ const rayFocalInput = document.getElementById('ray-focal');
 const raySimResult = document.getElementById('ray-sim-result');
 
 let rows = loadRows();
-renderDataTable(table, rows);
+let editingRowId = '';
+
+function renderExperimentTable() {
+  renderDataTable(table, rows, { editable: true, editingId: editingRowId });
+}
+
+renderExperimentTable();
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf4f8fb);
@@ -58,14 +94,7 @@ const componentMap = new Map();
 let rayLines = [];
 let lastExperimentKey = '';
 let rayObjectDrag = false;
-
-function cmToX(cm) {
-  return cm / 4;
-}
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
+let correctionSupport = null;
 
 function makeMat(color, options = {}) {
   return new THREE.MeshStandardMaterial({
@@ -80,6 +109,12 @@ function makeMat(color, options = {}) {
   });
 }
 
+const dragHitAreaMaterial = new THREE.MeshBasicMaterial({
+  transparent: true,
+  opacity: 0,
+  depthWrite: false
+});
+
 function labelTexture(text) {
   const canvas = document.createElement('canvas');
   canvas.width = 256;
@@ -90,7 +125,11 @@ function labelTexture(text) {
   ctx.strokeStyle = 'rgba(22,135,167,0.55)';
   ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
   ctx.fillStyle = '#162532';
-  ctx.font = '700 27px Microsoft YaHei, sans-serif';
+  let fontSize = 27;
+  do {
+    ctx.font = `700 ${fontSize}px Microsoft YaHei, sans-serif`;
+    fontSize -= 1;
+  } while (ctx.measureText(text).width > 228 && fontSize > 18);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, 128, 42);
@@ -104,8 +143,18 @@ function addLabel(text, x, y = 2.92) {
   sprite.position.set(x, y, -0.82);
   sprite.scale.set(1.7, 0.55, 1);
   sprite.renderOrder = 50;
+  sprite.userData.text = text;
   scene.add(sprite);
   return sprite;
+}
+
+function updateLabel(sprite, text) {
+  if (!sprite || sprite.userData.text === text) return;
+  const previousMaterial = sprite.material;
+  sprite.material = labelTexture(text);
+  sprite.userData.text = text;
+  previousMaterial.map?.dispose();
+  previousMaterial.dispose();
 }
 
 function scaleTexture(text) {
@@ -138,71 +187,140 @@ function addScaleNumber(text, x) {
 
 function rulerTexture() {
   const canvas = document.createElement('canvas');
-  canvas.width = 2400;
-  canvas.height = 260;
+  canvas.width = 3200;
+  canvas.height = 360;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.48)';
-  ctx.fillRect(0, 38, canvas.width, 150);
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.76)';
-  ctx.lineWidth = 5;
-  ctx.strokeRect(8, 38, canvas.width - 16, 150);
-
-  const startCm = -32;
-  const endCm = 32;
-  const span = endCm - startCm;
-  const left = 90;
-  const right = canvas.width - 90;
+  const left = 126;
+  const right = canvas.width - 126;
   const usable = right - left;
+  const span = RULER_MAX_CM - RULER_MIN_CM;
+  const bodyTop = 42;
+  const bodyBottom = 278;
 
-  for (let cm = startCm; cm <= endCm; cm += 1) {
-    const x = left + ((cm - startCm) / span) * usable;
-    const major = cm % 10 === 0;
-    const medium = cm % 5 === 0;
-    const tickHeight = major ? 112 : medium ? 82 : 52;
-    ctx.beginPath();
-    ctx.moveTo(x, 48);
-    ctx.lineTo(x, 48 + tickHeight);
-    ctx.strokeStyle = major ? '#050505' : medium ? '#111111' : '#222222';
-    ctx.lineWidth = major ? 6 : medium ? 4 : 2.5;
-    ctx.stroke();
+  const gradient = ctx.createLinearGradient(0, bodyTop, 0, bodyBottom);
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+  gradient.addColorStop(0.54, 'rgba(247, 251, 253, 0.82)');
+  gradient.addColorStop(1, 'rgba(224, 235, 242, 0.86)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(14, bodyTop, canvas.width - 28, bodyBottom - bodyTop);
 
-    if (major) {
-      ctx.fillStyle = '#050505';
-      ctx.font = '900 42px Microsoft YaHei, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(String(cm), x, 220);
-    }
+  ctx.fillStyle = 'rgba(22, 135, 167, 0.08)';
+  for (let cm = RULER_MIN_CM; cm < RULER_MAX_CM; cm += 10) {
+    const x = left + ((cm - RULER_MIN_CM) / span) * usable;
+    const nextX = left + ((Math.min(cm + 5, RULER_MAX_CM) - RULER_MIN_CM) / span) * usable;
+    ctx.fillRect(x, bodyTop + 8, nextX - x, bodyBottom - bodyTop - 16);
   }
 
-  ctx.fillStyle = '#050505';
-  ctx.font = '900 38px Microsoft YaHei, sans-serif';
+  ctx.strokeStyle = 'rgba(22, 37, 50, 0.72)';
+  ctx.lineWidth = 5;
+  ctx.strokeRect(14, bodyTop, canvas.width - 28, bodyBottom - bodyTop);
+
+  ctx.strokeStyle = 'rgba(22, 37, 50, 0.24)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(28, RULER_LABEL_Y - 48);
+  ctx.lineTo(canvas.width - 28, RULER_LABEL_Y - 48);
+  ctx.stroke();
+
+  getRulerTickMarks().forEach((tick) => {
+    const x = left + ((tick.cm - RULER_MIN_CM) / span) * usable;
+    const tickHeight = {
+      zero: 166,
+      major: 142,
+      medium: 112,
+      minor: 74,
+      half: 42
+    }[tick.kind];
+    ctx.beginPath();
+    ctx.moveTo(x, RULER_TICK_START_Y);
+    ctx.lineTo(x, RULER_TICK_START_Y + tickHeight);
+    ctx.strokeStyle = tick.kind === 'zero'
+      ? '#b64b5c'
+      : tick.kind === 'major'
+        ? '#162532'
+        : tick.kind === 'medium'
+          ? '#2f5369'
+          : tick.kind === 'minor'
+            ? 'rgba(22, 37, 50, 0.7)'
+            : 'rgba(22, 37, 50, 0.38)';
+    ctx.lineWidth = tick.kind === 'zero' ? 8 : tick.kind === 'major' ? 6 : tick.kind === 'medium' ? 4 : 2.3;
+    ctx.stroke();
+
+    if (tick.label) {
+      ctx.fillStyle = tick.kind === 'zero' ? '#b64b5c' : '#162532';
+      ctx.font = `${tick.kind === 'zero' ? '950' : '900'} 48px Microsoft YaHei, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(tick.label, x, RULER_LABEL_Y);
+    }
+  });
+
+  ctx.fillStyle = '#2f5369';
+  ctx.font = '900 36px Microsoft YaHei, sans-serif';
   ctx.textAlign = 'right';
-  ctx.fillText('cm', canvas.width - 44, 220);
+  ctx.textBaseline = 'middle';
+  ctx.fillText('cm', canvas.width - 48, RULER_LABEL_Y);
+
+  ctx.fillStyle = 'rgba(22, 37, 50, 0.5)';
+  ctx.font = '800 22px Microsoft YaHei, sans-serif';
+  ctx.fillText('0.5 cm', canvas.width - 48, bodyTop + 34);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 8;
+  texture.anisotropy = 12;
   return texture;
 }
 
-function addTransparentRuler() {
+function addInclinedRuler() {
+  const group = new THREE.Group();
+  group.position.set(0, BENCH_RULER_Y, 0.72);
+
   const ruler = new THREE.Mesh(
-    new THREE.PlaneGeometry(16.6, 1.16),
+    new THREE.PlaneGeometry(18.25, 1.08),
     new THREE.MeshBasicMaterial({
       map: rulerTexture(),
       transparent: true,
-      opacity: 0.86,
+      opacity: 0.96,
       depthWrite: false,
       side: THREE.DoubleSide
     })
   );
-  ruler.rotation.x = -Math.PI / 2;
-  ruler.position.set(0, 0.382, 0.96);
+  ruler.rotation.x = -BENCH_RULER_TILT_RADIANS;
+  ruler.position.set(0, 0.04, 0.04);
   ruler.renderOrder = 42;
-  scene.add(ruler);
+
+  const frameMat = makeMat(0xaebfca, { roughness: 0.44, metalness: 0.16 });
+  const upperLip = new THREE.Mesh(new THREE.BoxGeometry(18.45, 0.045, 0.045), frameMat);
+  upperLip.rotation.x = -BENCH_RULER_TILT_RADIANS;
+  upperLip.position.set(0, 0.48, -0.36);
+  const lowerLip = upperLip.clone();
+  lowerLip.position.set(0, -0.50, 0.56);
+  group.add(ruler, upperLip, lowerLip);
+  scene.add(group);
+}
+
+function addInclinedBenchBase() {
+  const baseMat = makeMat(0xb8cfdd, { roughness: 0.5, metalness: 0.08 });
+  const shadowMat = makeMat(0x87a8ba, { roughness: 0.48, metalness: 0.12 });
+  const wedge = new THREE.Mesh(new THREE.BoxGeometry(18.55, 0.22, 1.26), baseMat);
+  wedge.rotation.x = -BENCH_RULER_TILT_RADIANS;
+  wedge.position.set(0, BENCH_RISER_Y + 0.08, 0.58);
+  wedge.castShadow = true;
+  wedge.receiveShadow = true;
+
+  const rearLift = new THREE.Mesh(new THREE.BoxGeometry(18.7, 0.28, 0.22), shadowMat);
+  rearLift.position.set(0, BENCH_RISER_Y + 0.24, 0.08);
+  rearLift.castShadow = true;
+  rearLift.receiveShadow = true;
+
+  const frontFoot = new THREE.Mesh(new THREE.BoxGeometry(18.7, 0.12, 0.28), shadowMat);
+  frontFoot.position.set(0, BENCH_RISER_Y - 0.18, 1.1);
+  frontFoot.castShadow = true;
+  frontFoot.receiveShadow = true;
+
+  scene.add(wedge, rearLift, frontFoot);
 }
 
 function drawGlowLine(ctx, points, color, width = 2.5, dashed = false) {
@@ -486,76 +604,183 @@ function addLabBackdrop() {
 }
 
 function makeLens(convex = true, color = 0x69c7d8) {
-  const shape = new THREE.Shape();
+  const lens = new THREE.Group();
+  lens.userData.isVolumetric = true;
+
+  const glassMat = new THREE.MeshPhysicalMaterial({
+    color,
+    roughness: 0.03,
+    metalness: 0,
+    transparent: true,
+    opacity: convex ? 0.42 : 0.34,
+    transmission: 0.42,
+    thickness: convex ? 0.75 : 0.26,
+    ior: 1.48,
+    clearcoat: 0.7,
+    clearcoatRoughness: 0.04,
+    side: THREE.DoubleSide
+  });
+  const edgeMat = makeMat(0x1687a7, {
+    transparent: true,
+    opacity: 0.72,
+    roughness: 0.16,
+    metalness: 0.04,
+    emissive: 0x0a4452,
+    emissiveIntensity: 0.05
+  });
+  const highlightMat = makeMat(0xffffff, {
+    transparent: true,
+    opacity: 0.45,
+    roughness: 0.05,
+    emissive: 0xffffff,
+    emissiveIntensity: 0.16
+  });
+
   if (convex) {
-    shape.absellipse(0, 0, 0.28, 1.0, 0, Math.PI * 2);
+    const body = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 28), glassMat);
+    body.scale.set(0.24, 1.02, 0.46);
+    body.castShadow = true;
+    body.receiveShadow = true;
+    lens.add(body);
   } else {
-    shape.moveTo(-0.22, -1);
-    shape.quadraticCurveTo(0.16, 0, -0.22, 1);
-    shape.lineTo(0.22, 1);
-    shape.quadraticCurveTo(-0.16, 0, 0.22, -1);
-    shape.lineTo(-0.22, -1);
+    const shape = new THREE.Shape();
+    shape.moveTo(-0.23, -1);
+    shape.quadraticCurveTo(0.14, 0, -0.23, 1);
+    shape.lineTo(0.23, 1);
+    shape.quadraticCurveTo(-0.14, 0, 0.23, -1);
+    shape.lineTo(-0.23, -1);
+    const bodyGeometry = new THREE.ExtrudeGeometry(shape, {
+      depth: 0.22,
+      bevelEnabled: true,
+      bevelSize: 0.025,
+      bevelThickness: 0.025,
+      bevelSegments: 8,
+      curveSegments: 32
+    });
+    bodyGeometry.center();
+    const body = new THREE.Mesh(bodyGeometry, glassMat);
+    body.scale.z = 3.2;
+    body.castShadow = true;
+    body.receiveShadow = true;
+    lens.add(body);
   }
-  const geometry = new THREE.ExtrudeGeometry(shape, { depth: 0.08, bevelEnabled: false });
-  geometry.center();
-  return new THREE.Mesh(geometry, makeMat(color, { transparent: true, opacity: 0.5, roughness: 0.08 }));
+
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.74, 0.022, 12, 80), edgeMat);
+  rim.rotation.y = Math.PI / 2;
+  rim.scale.set(0.68, 1.34, 1);
+  lens.add(rim);
+
+  [-0.11, 0.11].forEach((x) => {
+    const surface = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.009, 8, 64), highlightMat);
+    surface.rotation.y = Math.PI / 2;
+    surface.scale.set(0.42, 1.42, 0.32);
+    surface.position.x = x;
+    lens.add(surface);
+  });
+
+  const verticalGlint = new THREE.Mesh(new THREE.BoxGeometry(0.018, 1.58, 0.018), highlightMat);
+  verticalGlint.position.set(convex ? -0.08 : -0.12, 0.02, 0.24);
+  lens.add(verticalGlint);
+
+  return lens;
 }
 
-function makeMount(keyName, label, x, mesh) {
+function makeCorrectionSupport() {
+  const support = new THREE.Group();
+  const metal = makeMat(0x8aa0ae, { metalness: 0.42, roughness: 0.34 });
+  const dark = makeMat(0x5f7180, { metalness: 0.48, roughness: 0.32 });
+
+  [-0.48, 0.48].forEach((z) => {
+    const upright = new THREE.Mesh(new THREE.BoxGeometry(0.13, 1.72, 0.08), metal);
+    upright.position.set(0, 0, z);
+    support.add(upright);
+  });
+
+  const topBridge = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.08, 1.08), metal);
+  topBridge.position.y = 0.82;
+  const lowerCradle = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.98), dark);
+  lowerCradle.position.y = -0.78;
+  support.add(topBridge, lowerCradle);
+
+  const convexLens = makeLens(true, 0x69c7d8);
+  convexLens.scale.set(0.78, 0.82, 0.88);
+  convexLens.position.x = 0.02;
+
+  const concaveLens = makeLens(false, 0x7fc0df);
+  concaveLens.scale.set(0.86, 0.82, 0.88);
+  concaveLens.position.x = 0.02;
+
+  const emptySlot = new THREE.Mesh(
+    new THREE.BoxGeometry(0.05, 1.38, 0.58),
+    makeMat(0xe8f1f6, { transparent: true, opacity: 0.34, roughness: 0.28 })
+  );
+
+  support.add(convexLens, concaveLens, emptySlot);
+  support.userData.convexLens = convexLens;
+  support.userData.concaveLens = concaveLens;
+  support.userData.emptySlot = emptySlot;
+  return support;
+}
+
+function updateCorrectionSupport(state) {
+  if (!correctionSupport) return;
+  correctionSupport.userData.convexLens.visible = state.lensType === 'convex';
+  correctionSupport.userData.concaveLens.visible = state.lensType === 'concave';
+  correctionSupport.userData.emptySlot.visible = state.lensType === 'none';
+}
+
+function makeMount(keyName, label, x, mesh, options = {}) {
   const group = new THREE.Group();
-  group.position.set(x, 0, 0);
-  const base = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.34, 0.75), makeMat(0xc8d5de, { metalness: 0.12 }));
-  base.position.y = 0.25;
-  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 1.35, 18), makeMat(0x8095a3, { metalness: 0.45 }));
-  post.position.y = 0.95;
+  group.position.set(x, BENCH_RISER_Y, 0);
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.52, MOUNT_BASE_HEIGHT, MOUNT_BASE_DEPTH), makeMat(0xc8d5de, { metalness: 0.12 }));
+  base.position.set(0, 0.2, MOUNT_POST_Z);
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.052, MOUNT_POST_HEIGHT, 18), makeMat(0x8095a3, { metalness: 0.45 }));
+  post.position.set(0, 0.82, MOUNT_POST_Z);
   mesh.position.y += 1.65;
   group.add(base, post, mesh);
   group.userData.key = keyName;
+  group.userData.label = label;
+  group.userData.dragInput = options.input ?? null;
+  group.userData.dragMin = options.min ?? -32;
+  group.userData.dragMax = options.max ?? 32;
   group.traverse((child) => {
     child.userData.parentDrag = group;
   });
+  if (options.draggable !== false) {
+    const hitArea = new THREE.Mesh(
+      new THREE.BoxGeometry(DRAG_PICK_AREA_WIDTH, DRAG_PICK_AREA_HEIGHT, DRAG_PICK_AREA_DEPTH),
+      dragHitAreaMaterial
+    );
+    hitArea.position.set(0, DRAG_PICK_AREA_Y, DRAG_PICK_AREA_Z);
+    hitArea.userData.parentDrag = group;
+    hitArea.userData.isDragHitArea = true;
+    group.add(hitArea);
+  }
   scene.add(group);
-  addLabel(label, x);
-  draggable.push(group);
+  if (options.draggable !== false) draggable.push(group);
   componentMap.set(keyName, group);
   return group;
 }
 
 function buildScene() {
   addLabBackdrop();
+  addInclinedBenchBase();
 
   const railMat = makeMat(0x7e94a3, { metalness: 0.38 });
-  const rail = new THREE.Mesh(new THREE.BoxGeometry(15.5, 0.16, 0.16), railMat);
-  rail.position.set(0, 0.1, -0.34);
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(17.6, 0.16, 0.16), railMat);
+  rail.position.set(0, BENCH_RISER_Y + 0.1, -0.34);
   const rail2 = rail.clone();
   rail2.position.z = 0.34;
   scene.add(rail, rail2);
 
-  const scaleDeck = new THREE.Mesh(new THREE.BoxGeometry(15.8, 0.035, 0.18), makeMat(0xd5e2ea));
-  scaleDeck.position.set(0, 0.255, 0.72);
-  scene.add(scaleDeck);
-  addTransparentRuler();
-
-  for (let cm = -32; cm <= 32; cm += 2) {
-    const major = cm % 10 === 0;
-    const medium = cm % 5 === 0;
-    const x = cmToX(cm);
-    const tick = new THREE.Mesh(
-      new THREE.BoxGeometry(major ? 0.035 : 0.022, major ? 0.12 : 0.075, major ? 0.58 : medium ? 0.42 : 0.28),
-      makeMat(major ? 0x050505 : 0x111111, { metalness: 0.02, roughness: 0.5 })
-    );
-    tick.position.set(x, 0.405, 0.72);
-    scene.add(tick);
-    if (major) addScaleNumber(String(cm), x);
-  }
-  addScaleNumber('cm', 7.55);
+  addInclinedRuler();
 
   const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.78, 28), makeMat(0xd9e5ec));
   lamp.rotation.z = Math.PI / 2;
   const glass = new THREE.Mesh(new THREE.CircleGeometry(0.22, 28), makeMat(0xffd47a, { transparent: true, opacity: 0.9, emissive: 0xffc04a, emissiveIntensity: 0.35 }));
   glass.position.set(0.41, 0, 0);
   lamp.add(glass);
-  makeMount('source', '光源', -7.0, lamp);
+  makeMount('source', '光源', -7.0, lamp, { draggable: false });
 
   const object = new THREE.Group();
   const plate = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.45, 0.92), makeMat(0xf8fbfd, { transparent: true, opacity: 0.72 }));
@@ -563,15 +788,27 @@ function buildScene() {
   arrow.position.y = 0.24;
   arrow.rotation.z = Math.PI;
   object.add(plate, arrow);
-  makeMount('object', '物屏', cmToX(Number(objectInput.value)), object);
+  makeMount('object', '物屏', cmToX(Number(objectInput.value)), object, {
+    input: objectInput,
+    min: -34,
+    max: -12
+  });
 
-  makeMount('collimator', '双凸透镜', cmToX(Number(collimatorInput.value)), makeLens(true));
+  makeMount('collimator', '双凸透镜', cmToX(Number(collimatorInput.value)), makeLens(true), {
+    input: collimatorInput,
+    min: -24,
+    max: -6
+  });
 
-  const slot = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.7, 1.05), makeMat(0xb9c7d1, { metalness: 0.18 }));
-  makeMount('slot', '槽板', -0.2, slot);
+  correctionSupport = makeCorrectionSupport();
+  makeMount('slot', '镜片支架', -1.35, correctionSupport, { draggable: false });
 
   const screen = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.9, 1.25), makeMat(0xffffff, { transparent: true, opacity: 0.84 }));
-  makeMount('screen', '像屏', cmToX(Number(screenInput.value)), screen);
+  makeMount('screen', '像屏', cmToX(Number(screenInput.value)), screen, {
+    input: screenInput,
+    min: 14,
+    max: 36
+  });
 }
 
 buildScene();
@@ -586,7 +823,7 @@ function updateRays(resultBundle) {
   });
   rayLines = [];
   resultBundle.rays.forEach((ray, index) => {
-    const points = ray.map(([x, y, z]) => new THREE.Vector3(x, y + 1.65, z));
+    const points = ray.map(([x, y, z]) => new THREE.Vector3(x, y + 1.65 + BENCH_RISER_Y, z));
     const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), index === 1 ? correctedMat : rayMat);
     line.renderOrder = 100;
     rayLines.push(line);
@@ -626,12 +863,26 @@ function setComponentPositions(state) {
   componentMap.get('screen').position.x = cmToX(state.screenCm);
 }
 
+function updatePositionReadouts(state) {
+  objectValue.textContent = formatRailPosition(state.objectCm);
+  collimatorValue.textContent = formatRailPosition(state.collimatorCm);
+  screenValue.textContent = formatRailPosition(state.screenCm);
+}
+
+function applyRecommendedCorrection() {
+  const result = evaluateExperiment({ eyeId: eyeInput.value, screenCm: Number(screenInput.value) });
+  lensTypeInput.value = result.recommended.type;
+  lensPowerInput.value = result.correction.toFixed(2);
+}
+
 function updateExperiment(force = false) {
   const state = readExperimentState();
   const key = experimentKey(state);
   if (!force && key === lastExperimentKey) return;
   lastExperimentKey = key;
   setComponentPositions(state);
+  updatePositionReadouts(state);
+  updateCorrectionSupport(state);
   const bundle = traceTeachingRays({
     eyeId: state.eyeId,
     lensType: state.lensType,
@@ -662,12 +913,15 @@ function updateExperiment(force = false) {
   input.addEventListener('input', () => updateExperiment(true));
 });
 
+eyeInput.addEventListener('change', () => {
+  applyRecommendedCorrection();
+  updateExperiment(true);
+});
+
 rayFocalInput.addEventListener('input', drawRaySim);
 
 document.getElementById('auto-correct').addEventListener('click', () => {
-  const result = evaluateExperiment({ eyeId: eyeInput.value, screenCm: Number(screenInput.value) });
-  lensTypeInput.value = result.recommended.type;
-  lensPowerInput.value = result.correction.toFixed(2);
+  applyRecommendedCorrection();
   updateExperiment(true);
 });
 
@@ -676,7 +930,43 @@ document.getElementById('record-measurement').addEventListener('click', () => {
   const measuredFocus = EYES[eyeInput.value].focusCm;
   const fittedPower = lensTypeInput.value === 'none' ? Number.NaN : Number(lensPowerInput.value);
   rows = updateRowWithMeasurement(rows, eyeInput.value, measuredFocus, fittedPower);
-  renderDataTable(table, rows);
+  editingRowId = '';
+  renderExperimentTable();
+});
+
+table.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-row-action]');
+  if (!button) return;
+  const eyeId = button.dataset.eyeId;
+  const action = button.dataset.rowAction;
+
+  if (action === 'edit') {
+    editingRowId = eyeId;
+    renderExperimentTable();
+    return;
+  }
+
+  if (action === 'cancel') {
+    editingRowId = '';
+    renderExperimentTable();
+    return;
+  }
+
+  if (action === 'delete') {
+    rows = clearRowData(rows, eyeId);
+    editingRowId = '';
+    renderExperimentTable();
+    return;
+  }
+
+  if (action === 'save') {
+    const row = table.querySelector(`[data-eye-row="${eyeId}"]`);
+    const measurements = [0, 1, 2].map((index) => row.querySelector(`[data-field="measurement"][data-index="${index}"]`)?.value ?? '');
+    const correctionFit = row.querySelector('[data-field="correctionFit"]')?.value ?? '';
+    rows = updateRowData(rows, eyeId, { measurements, correctionFit });
+    editingRowId = '';
+    renderExperimentTable();
+  }
 });
 
 document.getElementById('save-report').addEventListener('click', () => {
@@ -692,7 +982,7 @@ document.querySelectorAll('[data-view]').forEach((button) => {
       side: [12, 3.5, 0],
       top: [0, 13, 0.01],
       teach: [8, 5.2, 9],
-      reset: [8, 5.2, 9]
+      reset: [0, 3.2, 12]
     };
     camera.position.set(...presets[view]);
     controls.target.set(0, 0.7, 0);
@@ -702,24 +992,51 @@ document.querySelectorAll('[data-view]').forEach((button) => {
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
+const railDragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -(BENCH_RISER_Y + 0.28));
+const dragPoint = new THREE.Vector3();
 let activeDrag = null;
 
-renderer.domElement.addEventListener('pointerdown', (event) => {
+function updatePointerFromEvent(event) {
   const rect = renderer.domElement.getBoundingClientRect();
   pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   pointer.y = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
+}
+
+function moveActiveDrag(event) {
+  if (!activeDrag) return;
+  updatePointerFromEvent(event);
   raycaster.setFromCamera(pointer, camera);
-  const hit = raycaster.intersectObjects(draggable, true)[0];
-  activeDrag = hit?.object.userData.parentDrag || null;
-  if (activeDrag) controls.enabled = false;
+  if (!raycaster.ray.intersectPlane(railDragPlane, dragPoint)) return;
+
+  if (activeDrag.userData.dragInput) {
+    const cm = railXToSnappedCm(dragPoint.x, activeDrag.userData.dragMin, activeDrag.userData.dragMax);
+    activeDrag.userData.dragInput.value = String(cm);
+    activeDrag.position.x = cmToX(cm);
+  } else {
+    activeDrag.position.x = clamp(dragPoint.x, -7.5, 8.5);
+  }
+  updateExperiment(true);
+}
+
+renderer.domElement.addEventListener('pointerdown', (event) => {
+  updatePointerFromEvent(event);
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(draggable, true);
+  const railX = raycaster.ray.intersectPlane(railDragPlane, dragPoint) ? dragPoint.x : Number.NaN;
+  activeDrag = selectDragTargetFromHits(hits, railX);
+  if (activeDrag) {
+    renderer.domElement.setPointerCapture(event.pointerId);
+    controls.enabled = false;
+    moveActiveDrag(event);
+  }
 });
 
 function setObjectFromRayPointer(event) {
   const rect = rayCanvas.getBoundingClientRect();
   const lensX = rect.left + rect.width * 0.52;
   const scale = (rect.width - 90) / 72;
-  const cm = clamp((event.clientX - lensX) / scale, -34, -12);
-  objectInput.value = String(Math.round(cm));
+  const cm = snapRailCm((event.clientX - lensX) / scale, -34, -12);
+  objectInput.value = String(cm);
   updateExperiment(true);
 }
 
@@ -742,21 +1059,19 @@ rayCanvas.addEventListener('pointercancel', () => {
 });
 
 window.addEventListener('pointermove', (event) => {
-  if (!activeDrag) return;
-  const rect = renderer.domElement.getBoundingClientRect();
-  const x = ((event.clientX - rect.left) / rect.width) * 14 - 7;
-  activeDrag.position.x = THREE.MathUtils.clamp(x, -7.5, 8.5);
-  const cm = Math.round(activeDrag.position.x * 4);
-  if (activeDrag.userData.key === 'screen') screenInput.value = THREE.MathUtils.clamp(cm, 14, 36);
-  if (activeDrag.userData.key === 'collimator') collimatorInput.value = THREE.MathUtils.clamp(cm, -24, -6);
-  if (activeDrag.userData.key === 'object') objectInput.value = THREE.MathUtils.clamp(cm, -34, -12);
-  updateExperiment(true);
+  moveActiveDrag(event);
 });
 
-window.addEventListener('pointerup', () => {
+function endActiveDrag(event) {
+  if (activeDrag && renderer.domElement.hasPointerCapture?.(event.pointerId)) {
+    renderer.domElement.releasePointerCapture(event.pointerId);
+  }
   activeDrag = null;
   controls.enabled = true;
-});
+}
+
+window.addEventListener('pointerup', endActiveDrag);
+window.addEventListener('pointercancel', endActiveDrag);
 
 function resize() {
   const rect = mount.getBoundingClientRect();

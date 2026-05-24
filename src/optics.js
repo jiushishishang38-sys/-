@@ -45,6 +45,7 @@ export function initialRows() {
 }
 
 export function loadRows() {
+  if (typeof localStorage === 'undefined') return initialRows();
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY)) || initialRows();
   } catch {
@@ -53,13 +54,32 @@ export function loadRows() {
 }
 
 export function saveRows(rows) {
+  if (typeof localStorage === 'undefined') return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
 }
 
-export function updateRowWithMeasurement(rows, eyeId, valueCm, fittedPower) {
-  const row = rows.find((item) => item.id === eyeId);
-  if (!row) return rows;
-  row.measurements = [...(row.measurements || []), Number(valueCm.toFixed(2))].slice(-3);
+function normalizeMeasurements(values = []) {
+  return values
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value) && value > 0)
+    .map((value) => Number(value.toFixed(2)))
+    .slice(0, 3);
+}
+
+function resetRow(row) {
+  row.measurements = [];
+  row.average = '';
+  row.diopter = '';
+  row.type = '';
+  row.correctionCalc = '';
+  row.correctionFit = '';
+}
+
+function applyRowCalculations(row, fittedPower = row.correctionFit) {
+  if (!row.measurements.length) {
+    resetRow(row);
+    return row;
+  }
   const average = row.measurements.reduce((sum, item) => sum + item, 0) / row.measurements.length;
   const diopter = diopterFromCm(average);
   const correction = correctionPowerForEye(average);
@@ -67,7 +87,33 @@ export function updateRowWithMeasurement(rows, eyeId, valueCm, fittedPower) {
   row.diopter = diopter.toFixed(2);
   row.type = classifyEye(average);
   row.correctionCalc = correction.toFixed(2);
-  row.correctionFit = Number.isFinite(fittedPower) ? fittedPower.toFixed(2) : '';
+  const fitted = Number(fittedPower);
+  row.correctionFit = Number.isFinite(fitted) ? fitted.toFixed(2) : '';
+  return row;
+}
+
+export function updateRowData(rows, eyeId, values = {}) {
+  const row = rows.find((item) => item.id === eyeId);
+  if (!row) return rows;
+  row.measurements = normalizeMeasurements(values.measurements);
+  applyRowCalculations(row, values.correctionFit);
+  saveRows(rows);
+  return rows;
+}
+
+export function clearRowData(rows, eyeId) {
+  const row = rows.find((item) => item.id === eyeId);
+  if (!row) return rows;
+  resetRow(row);
+  saveRows(rows);
+  return rows;
+}
+
+export function updateRowWithMeasurement(rows, eyeId, valueCm, fittedPower) {
+  const row = rows.find((item) => item.id === eyeId);
+  if (!row) return rows;
+  row.measurements = [...(row.measurements || []), Number(valueCm.toFixed(2))].slice(-3);
+  applyRowCalculations(row, fittedPower);
   saveRows(rows);
   return rows;
 }
@@ -127,7 +173,7 @@ export function traceTeachingRays({ eyeId, lensType, lensPower, screenCm, cylind
   return { rays, result };
 }
 
-export function renderDataTable(table, rows) {
+function renderDataTableLegacy(table, rows) {
   table.innerHTML = `
     <thead>
       <tr>
@@ -149,5 +195,72 @@ export function renderDataTable(table, rows) {
           <td>${row.correctionCalc ?? ''}</td>
           <td>${row.correctionFit ?? ''}</td>
         </tr>`).join('')}
+    </tbody>`;
+}
+
+function formatTableValue(value) {
+  return value === undefined || value === null || value === '' ? '<span class="empty-cell">—</span>' : value;
+}
+
+function renderMeasurementCell(row, index, editing) {
+  const value = row.measurements?.[index] ?? '';
+  if (!editing) return `<td>${formatTableValue(value)}</td>`;
+  return `
+    <td>
+      <input class="table-input" type="number" min="0" step="0.01"
+        value="${value}" data-field="measurement" data-index="${index}" aria-label="${row.id} 焦距 ${index + 1}" />
+    </td>`;
+}
+
+function renderFitCell(row, editing) {
+  if (!editing) return `<td>${formatTableValue(row.correctionFit)}</td>`;
+  return `
+    <td>
+      <input class="table-input" type="number" step="0.01"
+        value="${row.correctionFit ?? ''}" data-field="correctionFit" aria-label="${row.id} 实配值" />
+    </td>`;
+}
+
+function renderActionCell(row, editing) {
+  if (editing) {
+    return `
+      <td class="table-actions">
+        <button type="button" class="button small primary" data-row-action="save" data-eye-id="${row.id}">保存</button>
+        <button type="button" class="button small" data-row-action="cancel" data-eye-id="${row.id}">取消</button>
+      </td>`;
+  }
+  return `
+    <td class="table-actions">
+      <button type="button" class="button small" data-row-action="edit" data-eye-id="${row.id}">修改</button>
+      <button type="button" class="button small danger" data-row-action="delete" data-eye-id="${row.id}">删除</button>
+    </td>`;
+}
+
+export function renderDataTable(table, rows, options = {}) {
+  const editable = options.editable === true;
+  const editingId = options.editingId ?? '';
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>模拟眼</th><th>焦距 1 cm</th><th>焦距 2 cm</th><th>焦距 3 cm</th>
+        <th>平均值 cm</th><th>焦度 D</th><th>屈光不正性质</th>
+        <th>矫正镜片焦度计算值 D</th><th>实配值 D</th>${editable ? '<th>操作</th>' : ''}
+      </tr>
+    </thead>
+    <tbody>
+      ${rows.map((row) => {
+        const editing = editable && editingId === row.id;
+        return `
+        <tr data-eye-row="${row.id}"${editing ? ' class="editing-row"' : ''}>
+          <td>${row.id}</td>
+          ${[0, 1, 2].map((index) => renderMeasurementCell(row, index, editing)).join('')}
+          <td>${formatTableValue(row.average)}</td>
+          <td>${formatTableValue(row.diopter)}</td>
+          <td>${formatTableValue(row.type)}</td>
+          <td>${formatTableValue(row.correctionCalc)}</td>
+          ${renderFitCell(row, editing)}
+          ${editable ? renderActionCell(row, editing) : ''}
+        </tr>`;
+      }).join('')}
     </tbody>`;
 }

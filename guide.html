@@ -119,16 +119,25 @@
                     <p>平行光经透镜后会聚，或反向延长相交的位置。</p>
                   </div>
                   <div class="concept-diagram focus-map image2" aria-hidden="true">
-                    <span class="demo-tag">概念光路演示图</span>
-                    <span class="ray-label incoming">平行入射光</span>
-                    <span class="ray-label outgoing">会聚到焦点</span>
-                    <div class="map-axis"></div>
-                    <div class="map-lens"></div>
-                    <div class="map-ray ray-top"></div>
-                    <div class="map-ray ray-mid"></div>
-                    <div class="map-ray ray-bottom"></div>
-                    <div class="map-point focus-point">F</div>
-                    <span class="diagram-note focus-note">三束平行光经透镜后相交的位置</span>
+                    <svg class="optics-svg" viewBox="0 0 600 270" data-optics-diagram="focus-rays">
+                      <defs>
+                        <marker id="arrow-focus-ray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                          <path d="M 0 0 L 10 5 L 0 10 z"></path>
+                        </marker>
+                      </defs>
+                      <rect class="svg-paper" x="18" y="20" width="564" height="230" rx="12"></rect>
+                      <text class="svg-tag" x="42" y="52">概念光路演示图</text>
+                      <line class="svg-axis" x1="48" y1="135" x2="552" y2="135" marker-end="url(#arrow-focus-ray)"></line>
+                      <path class="svg-lens convex" d="M292 35 C332 92 332 178 292 235 C252 178 252 92 292 35 Z"></path>
+                      <circle class="svg-focus" cx="450" cy="135" r="15"></circle>
+                      <text class="svg-focus-text" x="450" y="141">F</text>
+                      <text class="svg-label" x="70" y="82">平行入射光</text>
+                      <text class="svg-label" x="456" y="102">实焦点</text>
+                      <path class="svg-ray" d="M70 82 H292 L450 135 L532 162" marker-end="url(#arrow-focus-ray)"></path>
+                      <path class="svg-ray" d="M70 135 H532" marker-end="url(#arrow-focus-ray)"></path>
+                      <path class="svg-ray" d="M70 188 H292 L450 135 L532 108" marker-end="url(#arrow-focus-ray)"></path>
+                      <text class="svg-note" x="300" y="238">平行光经凸透镜后在主轴上会聚于焦点</text>
+                    </svg>
                   </div>
                 </article>
                 <article class="carousel-slide concept-slide" data-carousel-slide>
@@ -138,16 +147,28 @@
                     <p>透镜中心到焦点的距离，常用 m 或 cm 表示。</p>
                   </div>
                   <div class="concept-diagram focal-length-map image2" aria-hidden="true">
-                    <span class="demo-tag">概念光路演示图</span>
-                    <span class="ray-label incoming">透镜中心 O</span>
-                    <span class="ray-label outgoing">焦点 F</span>
-                    <div class="map-axis"></div>
-                    <div class="map-lens"></div>
-                    <div class="map-point lens-center">O</div>
-                    <div class="map-point focus-point">F</div>
-                    <div class="distance-line"></div>
-                    <div class="distance-label">f</div>
-                    <span class="diagram-note distance-note">O 到 F 的距离就是焦距</span>
+                    <svg class="optics-svg" viewBox="0 0 600 270" data-optics-diagram="focal-length">
+                      <defs>
+                        <marker id="arrow-focal-ray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                          <path d="M 0 0 L 10 5 L 0 10 z"></path>
+                        </marker>
+                      </defs>
+                      <rect class="svg-paper" x="18" y="20" width="564" height="230" rx="12"></rect>
+                      <text class="svg-tag" x="42" y="52">焦距定义</text>
+                      <line class="svg-axis" x1="54" y1="134" x2="552" y2="134" marker-end="url(#arrow-focal-ray)"></line>
+                      <path class="svg-lens convex" d="M286 35 C326 92 326 178 286 235 C246 178 246 92 286 35 Z"></path>
+                      <circle class="svg-center" cx="286" cy="134" r="15"></circle>
+                      <text class="svg-center-text" x="286" y="140">O</text>
+                      <circle class="svg-focus" cx="444" cy="134" r="15"></circle>
+                      <text class="svg-focus-text" x="444" y="140">F</text>
+                      <path class="svg-ray" d="M74 86 H286 L444 134 L530 160" marker-end="url(#arrow-focal-ray)"></path>
+                      <path class="svg-ray" d="M74 182 H286 L444 134 L530 108" marker-end="url(#arrow-focal-ray)"></path>
+                      <line class="svg-measure" x1="286" y1="214" x2="444" y2="214"></line>
+                      <line class="svg-measure-tick" x1="286" y1="202" x2="286" y2="226"></line>
+                      <line class="svg-measure-tick" x1="444" y1="202" x2="444" y2="226"></line>
+                      <text class="svg-measure-label" x="365" y="205">f</text>
+                      <text class="svg-note" x="300" y="242">透镜光心 O 到焦点 F 的距离为焦距</text>
+                    </svg>
                   </div>
                 </article>
                 <article class="carousel-slide concept-slide" data-carousel-slide>
@@ -157,11 +178,28 @@
                     <p>透镜焦度，φ = 1/f，f 用米表示，单位为 D。</p>
                   </div>
                   <div class="concept-diagram diopter-map image2" aria-hidden="true">
-                    <span class="demo-tag">概念光路演示图</span>
-                    <div class="formula-card">φ = 1 / f</div>
-                    <div class="meter-scale"><span>f = 0.5 m</span><span>φ = 2 D</span></div>
-                    <div class="power-bars"><i></i><i></i><i></i></div>
-                    <span class="diagram-note power-note">焦距越短，屈光度越大</span>
+                    <svg class="optics-svg" viewBox="0 0 600 270" data-optics-diagram="diopter-compare">
+                      <defs>
+                        <marker id="arrow-diopter-ray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                          <path d="M 0 0 L 10 5 L 0 10 z"></path>
+                        </marker>
+                      </defs>
+                      <rect class="svg-paper" x="18" y="20" width="564" height="230" rx="12"></rect>
+                      <text class="svg-tag" x="42" y="52">φ = 1 / f</text>
+                      <text class="svg-label" x="72" y="84">长焦距：f = 0.50 m，φ = 2 D</text>
+                      <text class="svg-label" x="72" y="178">短焦距：f = 0.25 m，φ = 4 D</text>
+                      <line class="svg-axis thin" x1="62" y1="116" x2="548" y2="116"></line>
+                      <path class="svg-lens small convex" d="M244 72 C274 96 274 136 244 160 C214 136 214 96 244 72 Z"></path>
+                      <path class="svg-ray" d="M76 94 H244 L430 116 L532 128" marker-end="url(#arrow-diopter-ray)"></path>
+                      <path class="svg-ray" d="M76 138 H244 L430 116 L532 104" marker-end="url(#arrow-diopter-ray)"></path>
+                      <circle class="svg-focus" cx="430" cy="116" r="10"></circle>
+                      <line class="svg-axis thin" x1="62" y1="210" x2="548" y2="210"></line>
+                      <path class="svg-lens small convex strong" d="M244 166 C286 192 286 228 244 254 C202 228 202 192 244 166 Z"></path>
+                      <path class="svg-ray strong" d="M76 188 H244 L334 210 L532 238" marker-end="url(#arrow-diopter-ray)"></path>
+                      <path class="svg-ray strong" d="M76 232 H244 L334 210 L532 182" marker-end="url(#arrow-diopter-ray)"></path>
+                      <circle class="svg-focus" cx="334" cy="210" r="10"></circle>
+                      <text class="svg-note" x="432" y="238">焦距越短，屈光度越大</text>
+                    </svg>
                   </div>
                 </article>
                 <article class="carousel-slide concept-slide" data-carousel-slide>
@@ -171,16 +209,25 @@
                     <p>使光线会聚，可矫正远视眼。</p>
                   </div>
                   <div class="concept-diagram convex-map image2" aria-hidden="true">
-                    <span class="demo-tag">概念光路演示图</span>
-                    <span class="ray-label incoming">平行入射光</span>
-                    <span class="ray-label outgoing">实焦点</span>
-                    <div class="map-axis"></div>
-                    <div class="map-lens convex-shape"></div>
-                    <div class="map-ray ray-top"></div>
-                    <div class="map-ray ray-mid"></div>
-                    <div class="map-ray ray-bottom"></div>
-                    <div class="map-point focus-point">F</div>
-                    <span class="diagram-note focus-note">凸透镜让光线会聚</span>
+                    <svg class="optics-svg" viewBox="0 0 600 270" data-optics-diagram="convex-rays" data-focus="real">
+                      <defs>
+                        <marker id="arrow-convex-ray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                          <path d="M 0 0 L 10 5 L 0 10 z"></path>
+                        </marker>
+                      </defs>
+                      <rect class="svg-paper" x="18" y="20" width="564" height="230" rx="12"></rect>
+                      <text class="svg-tag" x="42" y="52">凸透镜真实光路</text>
+                      <line class="svg-axis" x1="50" y1="135" x2="552" y2="135" marker-end="url(#arrow-convex-ray)"></line>
+                      <path class="svg-lens convex" d="M292 35 C332 92 332 178 292 235 C252 178 252 92 292 35 Z"></path>
+                      <path class="svg-ray" d="M70 78 H292 L456 135 L532 160" marker-end="url(#arrow-convex-ray)"></path>
+                      <path class="svg-ray" d="M70 135 H532" marker-end="url(#arrow-convex-ray)"></path>
+                      <path class="svg-ray" d="M70 192 H292 L456 135 L532 110" marker-end="url(#arrow-convex-ray)"></path>
+                      <circle class="svg-focus" cx="456" cy="135" r="15"></circle>
+                      <text class="svg-focus-text" x="456" y="141">F</text>
+                      <text class="svg-label" x="74" y="74">平行光</text>
+                      <text class="svg-label" x="455" y="100">实焦点</text>
+                      <text class="svg-note" x="300" y="238">凸透镜使平行光会聚，可用于矫正远视</text>
+                    </svg>
                   </div>
                 </article>
                 <article class="carousel-slide concept-slide" data-carousel-slide>
@@ -190,18 +237,27 @@
                     <p>使光线发散，可矫正近视眼。</p>
                   </div>
                   <div class="concept-diagram concave-map image2" aria-hidden="true">
-                    <span class="demo-tag">概念光路演示图</span>
-                    <span class="ray-label incoming">平行入射光</span>
-                    <span class="ray-label outgoing">发散光线</span>
-                    <div class="map-axis"></div>
-                    <div class="map-lens concave-shape"></div>
-                    <div class="map-ray diverge-top"></div>
-                    <div class="map-ray diverge-mid"></div>
-                    <div class="map-ray diverge-bottom"></div>
-                    <div class="virtual-ray virtual-top"></div>
-                    <div class="virtual-ray virtual-bottom"></div>
-                    <div class="map-point virtual-focus">F'</div>
-                    <span class="diagram-note virtual-note">反向延长线交于虚焦点</span>
+                    <svg class="optics-svg" viewBox="0 0 600 270" data-optics-diagram="concave-rays" data-focus="virtual">
+                      <defs>
+                        <marker id="arrow-concave-ray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                          <path d="M 0 0 L 10 5 L 0 10 z"></path>
+                        </marker>
+                      </defs>
+                      <rect class="svg-paper" x="18" y="20" width="564" height="230" rx="12"></rect>
+                      <text class="svg-tag" x="42" y="52">凹透镜真实光路</text>
+                      <line class="svg-axis" x1="50" y1="135" x2="552" y2="135" marker-end="url(#arrow-concave-ray)"></line>
+                      <path class="svg-lens concave" d="M278 40 C316 94 316 176 278 230 M306 40 C268 94 268 176 306 230"></path>
+                      <path class="svg-ray" d="M70 82 H292 L532 52" marker-end="url(#arrow-concave-ray)"></path>
+                      <path class="svg-ray" d="M70 135 H532" marker-end="url(#arrow-concave-ray)"></path>
+                      <path class="svg-ray" d="M70 188 H292 L532 218" marker-end="url(#arrow-concave-ray)"></path>
+                      <path class="svg-virtual" d="M292 82 L154 135"></path>
+                      <path class="svg-virtual" d="M292 188 L154 135"></path>
+                      <circle class="svg-focus virtual" cx="154" cy="135" r="15"></circle>
+                      <text class="svg-focus-text" x="154" y="141">F'</text>
+                      <text class="svg-label" x="74" y="74">平行光</text>
+                      <text class="svg-label" x="418" y="84">出射光发散</text>
+                      <text class="svg-note" x="300" y="238">出射光的反向延长线相交于入射侧虚焦点</text>
+                    </svg>
                   </div>
                 </article>
               </div>
