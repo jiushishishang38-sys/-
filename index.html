@@ -3,103 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-    <title>光学探索 · 封面</title>
+    <title>OPTICAL SIMULATION · 光学透镜实验模拟平台</title>
     <link rel="stylesheet" href="./src/styles/app.css" />
   </head>
   <body data-page="cover">
     <main class="cover-page">
+      <nav class="cover-nav" aria-label="封面导航">
+        <a href="./course.html">PROJECT</a>
+        <a href="./guide.html">FEATURES</a>
+        <a href="./experiment.html">SIMULATION</a>
+        <a href="./report.html">REPORT</a>
+      </nav>
+
+      <div class="cover-stats" aria-label="平台统计">
+        <div class="cover-stat"><strong><span>+</span>2</strong><small>透镜类型</small></div>
+        <div class="cover-stat"><strong><span>+</span>6</strong><small>核心功能</small></div>
+        <div class="cover-stat"><strong><span>+</span>1</strong><small>实验报告</small></div>
+      </div>
+
+      <section class="cover-visual" aria-label="透明玻璃光学透镜与折射光路">
+        <img src="./src/assets/optical-sculpture-cover.png" alt="透明玻璃透镜、环形光学结构与紫蓝色折射光路" />
+      </section>
+
       <section class="cover-content">
-        <p class="eyebrow">几何光学 · 模拟眼实验</p>
-        <h1 class="cover-title">光学探索</h1>
-        <p class="cover-subtitle">从折射定律到人眼成像，在浅色精密实验环境中完成屈光不正与矫正的交互式研究。</p>
-        <div class="actions">
-          <a class="button primary" href="./course.html">开始探索</a>
-          <a class="button" href="./experiment.html">直接进入实验</a>
-        </div>
+        <h1 class="cover-title">OPTICAL<br />SIMULATION</h1>
+        <p class="cover-kicker">光学透镜实验模拟平台</p>
+        <p class="cover-subtitle">支持凸透镜 / 凹透镜、参数调节、自动计算、结果可视化与实验报告输出</p>
       </section>
-      <section class="cover-visual" aria-label="光路示意动画">
-        <canvas class="cover-canvas" id="coverCanvas"></canvas>
-        <div class="cover-note">
-          <span>平行光 · 透镜 · 焦点</span>
-          <span>调节光路，观察像的位置变化</span>
-        </div>
-      </section>
+
+      <a class="cover-cta" href="./experiment.html">START EXPERIMENT <span aria-hidden="true">↗</span></a>
     </main>
-
-    <script>
-      (() => {
-        const canvas = document.getElementById("coverCanvas");
-        const ctx = canvas.getContext("2d");
-        let animationId = 0;
-
-        function resize() {
-          const rect = canvas.getBoundingClientRect();
-          canvas.width = Math.max(1, Math.floor(rect.width * window.devicePixelRatio));
-          canvas.height = Math.max(1, Math.floor(rect.height * window.devicePixelRatio));
-          ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
-        }
-
-        function draw(time = 0) {
-          const w = canvas.clientWidth;
-          const h = canvas.clientHeight;
-          const cx = w * 0.46;
-          const cy = h * 0.48;
-          const pulse = Math.sin(time * 0.0016) * 10;
-          ctx.clearRect(0, 0, w, h);
-
-          ctx.strokeStyle = "rgba(55, 107, 143, 0.12)";
-          ctx.lineWidth = 1;
-          for (let x = 24; x < w; x += 40) {
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, h);
-            ctx.stroke();
-          }
-          for (let y = 24; y < h; y += 40) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(w, y);
-            ctx.stroke();
-          }
-
-          ctx.strokeStyle = "#1687a7";
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.ellipse(cx, cy, 24, 116, 0, 0, Math.PI * 2);
-          ctx.stroke();
-
-          const focusX = cx + 160 + pulse;
-          [-72, -36, 0, 36, 72].forEach((offset, index) => {
-            const startX = 34;
-            const startY = cy + offset;
-            ctx.strokeStyle = index === 2 ? "rgba(22, 135, 167, 0.92)" : "rgba(184, 123, 30, 0.78)";
-            ctx.lineWidth = index === 2 ? 2.4 : 1.8;
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(cx, startY * 0.92 + cy * 0.08);
-            ctx.lineTo(focusX, cy);
-            ctx.lineTo(w - 34, cy - offset * 0.34);
-            ctx.stroke();
-          });
-
-          ctx.fillStyle = "#b87b1e";
-          ctx.beginPath();
-          ctx.arc(focusX, cy, 5, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.fillStyle = "#162532";
-          ctx.font = "700 16px Microsoft YaHei, sans-serif";
-          ctx.fillText("f", focusX - 4, cy + 28);
-          ctx.fillText("模拟眼光路", 28, 34);
-
-          animationId = requestAnimationFrame(draw);
-        }
-
-        window.addEventListener("resize", resize);
-        resize();
-        draw();
-        window.addEventListener("pagehide", () => cancelAnimationFrame(animationId));
-      })();
-    </script>
   </body>
 </html>

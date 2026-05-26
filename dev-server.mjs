@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import { createReadStream, statSync, existsSync } from 'node:fs';
-import { extname, join, resolve } from 'node:path';
+import { extname, isAbsolute, join, relative, resolve } from 'node:path';
 
 const root = process.cwd();
 const port = Number(process.env.PORT || 4173);
@@ -18,7 +18,9 @@ createServer((req, res) => {
   let pathname = decodeURIComponent(url.pathname);
   if (pathname === '/') pathname = '/index.html';
   const file = resolve(join(root, pathname));
-  if (!file.startsWith(root) || !existsSync(file) || statSync(file).isDirectory()) {
+  const relativePath = relative(root, file);
+  const outsideRoot = relativePath.startsWith('..') || isAbsolute(relativePath);
+  if (outsideRoot || !existsSync(file) || statSync(file).isDirectory()) {
     res.writeHead(404);
     res.end('Not found');
     return;

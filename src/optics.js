@@ -1,5 +1,6 @@
 export const RETINA_CM = 24;
 const STORAGE_KEY = 'eye-lab-rows-v2';
+const ROW_IDS = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
 export const EYES = {
   A: { id: 'A', focusCm: 17.6, note: '屈光系统偏强' },
@@ -44,15 +45,6 @@ export function initialRows() {
     }));
 }
 
-export function loadRows() {
-  if (typeof localStorage === 'undefined') return initialRows();
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || initialRows();
-  } catch {
-    return initialRows();
-  }
-}
-
 export function saveRows(rows) {
   if (typeof localStorage === 'undefined') return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
@@ -64,6 +56,33 @@ function normalizeMeasurements(values = []) {
     .filter((value) => Number.isFinite(value) && value > 0)
     .map((value) => Number(value.toFixed(2)))
     .slice(0, 3);
+}
+
+function normalizeStoredRows(value) {
+  const defaultRows = initialRows();
+  if (!Array.isArray(value) || value.length !== ROW_IDS.length) return defaultRows;
+  const ids = value.map((row) => row?.id);
+  if (!ROW_IDS.every((id) => ids.includes(id))) return defaultRows;
+
+  const defaults = new Map(defaultRows.map((row) => [row.id, row]));
+  const rows = [];
+  for (const id of ROW_IDS) {
+    const source = value.find((row) => row?.id === id);
+    if (!Array.isArray(source?.measurements)) return defaultRows;
+    const row = { ...defaults.get(id), measurements: normalizeMeasurements(source.measurements) };
+    if (row.measurements.length) applyRowCalculations(row, source.correctionFit);
+    rows.push(row);
+  }
+  return rows;
+}
+
+export function loadRows() {
+  if (typeof localStorage === 'undefined') return initialRows();
+  try {
+    return normalizeStoredRows(JSON.parse(localStorage.getItem(STORAGE_KEY)));
+  } catch {
+    return initialRows();
+  }
 }
 
 function resetRow(row) {
@@ -118,9 +137,15 @@ export function updateRowWithMeasurement(rows, eyeId, valueCm, fittedPower) {
   return rows;
 }
 
+export function normalizeLensPower(lensType, lensPower) {
+  const power = Math.abs(Number(lensPower));
+  if (!Number.isFinite(power) || lensType === 'none') return 0;
+  return lensType === 'concave' ? -power : power;
+}
+
 export function evaluateExperiment({ eyeId, screenCm, lensPower = 0, lensType = 'none', cylinderAngle = 0 }) {
   const eye = EYES[eyeId] || EYES.D;
-  const signedLens = lensType === 'none' ? 0 : Number(lensPower);
+  const signedLens = normalizeLensPower(lensType, lensPower);
   const effectivePower = diopterFromCm(eye.focusCm) + signedLens;
   const focusCm = 100 / Math.max(0.2, effectivePower);
   const target = eye.astigmatic ? RETINA_CM + Math.sin((cylinderAngle * Math.PI) / 90) * 2.2 : RETINA_CM;
@@ -139,6 +164,7 @@ export function evaluateExperiment({ eyeId, screenCm, lensPower = 0, lensType = 
     retinaSharpness,
     type,
     correction,
+    signedLensPower: signedLens,
     recommended: recommendedLens(correction),
     isClearOnScreen: Math.abs(screenError) < 0.8,
     isCorrected: Math.abs(retinaError) < 0.8 || (eye.astigmatic && Math.abs(Math.sin((cylinderAngle * Math.PI) / 90)) < 0.18)
@@ -154,7 +180,7 @@ export function traceTeachingRays({ eyeId, lensType, lensPower, screenCm, cylind
   const eyeX = 0;
   const focusX = result.focusCm / 4;
   const screenX = screenCm / 4;
-  const lensStrength = lensType === 'none' ? 0 : Math.min(Math.abs(Number(lensPower)) / 8, 1);
+  const lensStrength = Math.min(Math.abs(normalizeLensPower(lensType, lensPower)) / 8, 1);
   const correctionScale = lensType === 'concave'
     ? 0.82 + lensStrength * 0.28
     : lensType === 'convex'
@@ -171,31 +197,6 @@ export function traceTeachingRays({ eyeId, lensType, lensPower, screenCm, cylind
     [screenX, result.screenError * 0.08 + y * 0.05, 0]
   ]);
   return { rays, result };
-}
-
-function renderDataTableLegacy(table, rows) {
-  table.innerHTML = `
-    <thead>
-      <tr>
-        <th>模拟眼</th><th>焦距 1 cm</th><th>焦距 2 cm</th><th>焦距 3 cm</th>
-        <th>平均值 cm</th><th>焦度 D</th><th>屈光不正性质</th>
-        <th>矫正镜片焦度计算值 D</th><th>实配值 D</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${rows.map((row) => `
-        <tr>
-          <td>${row.id}</td>
-          <td>${row.measurements?.[0] ?? ''}</td>
-          <td>${row.measurements?.[1] ?? ''}</td>
-          <td>${row.measurements?.[2] ?? ''}</td>
-          <td>${row.average ?? ''}</td>
-          <td>${row.diopter ?? ''}</td>
-          <td>${row.type ?? ''}</td>
-          <td>${row.correctionCalc ?? ''}</td>
-          <td>${row.correctionFit ?? ''}</td>
-        </tr>`).join('')}
-    </tbody>`;
 }
 
 function formatTableValue(value) {

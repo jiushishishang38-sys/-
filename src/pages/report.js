@@ -22,6 +22,10 @@ function resizeTextarea(textarea) {
   textarea.style.height = `${textarea.scrollHeight}px`;
 }
 
+function resizeDraftField(field) {
+  if (field.matches('textarea')) resizeTextarea(field);
+}
+
 const draft = loadDraft();
 const reportDateInput = document.getElementById('report-date');
 
@@ -39,10 +43,10 @@ if (reportDateInput && !reportDateInput.value) {
 document.querySelectorAll('[data-report-draft]').forEach((field) => {
   const key = field.dataset.reportDraft;
   if (draft[key]) field.value = draft[key];
-  resizeTextarea(field);
+  resizeDraftField(field);
   field.addEventListener('input', () => {
     draft[key] = field.value;
     saveDraft(draft);
-    resizeTextarea(field);
+    resizeDraftField(field);
   });
 });

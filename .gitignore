@@ -12,6 +12,7 @@ build/
 # Local preview and generated verification artifacts
 screenshots/
 .tools/
+.edge-profile/
 *.log
 server-out.txt
 server-err.txt

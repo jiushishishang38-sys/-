@@ -8,7 +8,7 @@
   </head>
   <body data-page="report">
     <header class="site-header no-print">
-      <a class="brand" href="./course.html">屈光模拟实验平台</a>
+      <a class="brand" href="./index.html">屈光模拟实验平台</a>
       <nav class="nav">
         <a href="./guide.html">课前引导</a>
         <a href="./experiment.html">3D 光具座</a>
@@ -21,18 +21,18 @@
       <section class="report-sheet" id="print-area">
         <h1>用模拟的方法研究眼睛的屈光不正及其矫正实验报告</h1>
         <div class="report-meta">
-          <label>姓名 <input /></label>
-          <label>班级 <input /></label>
-          <label>日期 <input id="report-date" type="date" /></label>
+          <label>姓名 <input data-report-draft="student-name" /></label>
+          <label>班级 <input data-report-draft="student-class" /></label>
+          <label>日期 <input id="report-date" type="date" data-report-draft="report-date" /></label>
         </div>
         <h2>一、实验目的</h2>
-        <textarea>通过模拟眼实验理解眼睛成像的光学原理，掌握近视、远视、散光及其矫正方法。</textarea>
+        <textarea data-report-draft="purpose">通过模拟眼实验理解眼睛成像的光学原理，掌握近视、远视、散光及其矫正方法。</textarea>
         <h2>二、实验数据记录</h2>
         <div class="table-wrap"><table id="report-table"></table></div>
         <h2>三、现象观察</h2>
-        <textarea placeholder="记录像屏清晰位置、焦点前后变化、镜片矫正效果等。"></textarea>
+        <textarea data-report-draft="observation" placeholder="记录像屏清晰位置、焦点前后变化、镜片矫正效果等。"></textarea>
         <h2>四、结论与反思</h2>
-        <textarea placeholder="说明 A-G 模拟眼的屈光性质，以及矫正镜片焦度计算值与实配值的差异原因。"></textarea>
+        <textarea data-report-draft="conclusion" placeholder="说明 A-G 模拟眼的屈光性质，以及矫正镜片焦度计算值与实配值的差异原因。"></textarea>
         <div class="report-section-head">
           <h2>五、思考题</h2>
           <span class="editable-badge no-print">可编辑</span>

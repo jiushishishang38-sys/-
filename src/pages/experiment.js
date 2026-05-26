@@ -30,6 +30,7 @@ import {
   EYES,
   evaluateExperiment,
   loadRows,
+  normalizeLensPower,
   renderDataTable,
   saveRows,
   traceTeachingRays,
@@ -872,7 +873,7 @@ function updatePositionReadouts(state) {
 function applyRecommendedCorrection() {
   const result = evaluateExperiment({ eyeId: eyeInput.value, screenCm: Number(screenInput.value) });
   lensTypeInput.value = result.recommended.type;
-  lensPowerInput.value = result.correction.toFixed(2);
+  lensPowerInput.value = Math.abs(result.correction).toFixed(2);
 }
 
 function updateExperiment(force = false) {
@@ -928,7 +929,9 @@ document.getElementById('auto-correct').addEventListener('click', () => {
 document.getElementById('record-measurement').addEventListener('click', () => {
   if (eyeInput.value === 'S') return;
   const measuredFocus = EYES[eyeInput.value].focusCm;
-  const fittedPower = lensTypeInput.value === 'none' ? Number.NaN : Number(lensPowerInput.value);
+  const fittedPower = lensTypeInput.value === 'none'
+    ? Number.NaN
+    : normalizeLensPower(lensTypeInput.value, lensPowerInput.value);
   rows = updateRowWithMeasurement(rows, eyeInput.value, measuredFocus, fittedPower);
   editingRowId = '';
   renderExperimentTable();

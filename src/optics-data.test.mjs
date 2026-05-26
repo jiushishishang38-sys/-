@@ -1,11 +1,16 @@
 import assert from 'node:assert/strict';
-import {
+import * as optics from './optics.js';
+
+const {
   classifyEye,
   clearRowData,
+  evaluateExperiment,
   initialRows,
+  loadRows,
+  normalizeLensPower,
   renderDataTable,
   updateRowData
-} from './optics.js';
+} = optics;
 
 const rows = initialRows();
 
@@ -45,3 +50,46 @@ assert.match(editableTable.innerHTML, /<th>操作<\/th>/);
 assert.match(editableTable.innerHTML, /data-row-action="delete" data-eye-id="A"/);
 assert.match(editableTable.innerHTML, /data-row-action="save" data-eye-id="B"/);
 assert.match(editableTable.innerHTML, /data-field="measurement" data-index="0"/);
+
+const originalStorage = globalThis.localStorage;
+function withStoredRows(value, callback) {
+  globalThis.localStorage = {
+    getItem: () => value,
+    setItem: () => {}
+  };
+  try {
+    return callback();
+  } finally {
+    if (originalStorage === undefined) {
+      delete globalThis.localStorage;
+    } else {
+      globalThis.localStorage = originalStorage;
+    }
+  }
+}
+
+assert.equal(withStoredRows('{}', () => loadRows()).length, 7);
+assert.equal(withStoredRows(JSON.stringify([{ id: 'A' }]), () => loadRows()).length, 7);
+
+const loadedRows = withStoredRows(JSON.stringify([
+  { id: 'A', measurements: ['17.234', '-1', 'bad', '18.2'], correctionFit: '-1.5' },
+  { id: 'B', measurements: [20.8], correctionFit: '' },
+  { id: 'C', measurements: [], correctionFit: '' },
+  { id: 'D', measurements: [], correctionFit: '' },
+  { id: 'E', measurements: [], correctionFit: '' },
+  { id: 'F', measurements: [], correctionFit: '' },
+  { id: 'G', measurements: [], correctionFit: '' }
+]), () => loadRows());
+assert.deepEqual(loadedRows.find((row) => row.id === 'A').measurements, [17.23, 18.2]);
+assert.equal(loadedRows.find((row) => row.id === 'A').average, '17.71');
+
+assert.equal(typeof normalizeLensPower, 'function');
+assert.equal(normalizeLensPower('concave', 2.5), -2.5);
+assert.equal(normalizeLensPower('concave', -2.5), -2.5);
+assert.equal(normalizeLensPower('convex', -3), 3);
+assert.equal(normalizeLensPower('none', 3), 0);
+
+const concaveResult = evaluateExperiment({ eyeId: 'D', screenCm: 24, lensType: 'concave', lensPower: 2 });
+const convexResult = evaluateExperiment({ eyeId: 'D', screenCm: 24, lensType: 'convex', lensPower: -2 });
+assert.equal(concaveResult.signedLensPower, -2);
+assert.equal(convexResult.signedLensPower, 2);
