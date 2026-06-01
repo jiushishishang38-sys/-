@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>3D 光具座模拟实验</title>
+    <title>模拟正式实验</title>
     <link rel="stylesheet" href="./src/styles/app.css" />
   </head>
   <body data-page="experiment">
@@ -11,10 +11,10 @@
       <a class="brand" href="./index.html">屈光模拟实验平台</a>
       <nav class="nav">
         <a href="./guide.html">课前引导</a>
-        <a href="./experiment.html">3D 光具座</a>
-        <a href="./eye.html">眼球 3D</a>
-        <a href="./quiz.html">课堂检测</a>
+        <a href="./eye.html">基础知识</a>
+        <a href="./experiment.html">模拟实验</a>
         <a href="./report.html">实验报告</a>
+        <a href="./quiz.html">知识夯实</a>
       </nav>
     </header>
     <main class="lab-layout">
@@ -25,60 +25,51 @@
             <h1>模拟眼屈光不正及其矫正</h1>
           </div>
           <div class="view-buttons">
-            <button data-view="front">正视</button>
-            <button data-view="side">侧视</button>
-            <button data-view="top">俯视</button>
-            <button data-view="teach">教学</button>
             <button data-view="reset">复位</button>
           </div>
         </div>
         <div class="equipment-canvas-layout">
-          <div class="equipment-overlay" aria-label="器材总览">
-            <div class="equipment-item">
-              <span class="equipment-thumb source-thumb" aria-hidden="true"><i></i></span>
-              <span class="equipment-name">光源</span>
+          <div id="experiment-canvas" class="three-canvas">
+            <div class="equipment-overlay" aria-label="器材总览">
+              <div class="equipment-item">
+                <span class="equipment-thumb source-thumb" aria-hidden="true"><i></i></span>
+                <span class="equipment-name">光源</span>
+              </div>
+              <div class="equipment-item">
+                <span class="equipment-thumb object-thumb" aria-hidden="true"><i></i></span>
+                <span class="equipment-name">物屏</span>
+              </div>
+              <div class="equipment-item">
+                <span class="equipment-thumb lens-thumb" aria-hidden="true"><i></i></span>
+                <span class="equipment-name">双凸透镜</span>
+              </div>
+              <div class="equipment-item">
+                <span class="equipment-thumb support-thumb" aria-hidden="true"><i></i></span>
+                <span class="equipment-name">镜片支架</span>
+              </div>
+              <div class="equipment-item">
+                <span class="equipment-thumb screen-thumb" aria-hidden="true"><i></i></span>
+                <span class="equipment-name">像屏</span>
+              </div>
+              <div class="equipment-item">
+                <span class="equipment-thumb detector-thumb" aria-hidden="true"><i></i></span>
+                <span class="equipment-name">探测器</span>
+              </div>
             </div>
-            <div class="equipment-item">
-              <span class="equipment-thumb object-thumb" aria-hidden="true"><i></i></span>
-              <span class="equipment-name">物屏</span>
-            </div>
-            <div class="equipment-item">
-              <span class="equipment-thumb lens-thumb" aria-hidden="true"><i></i></span>
-              <span class="equipment-name">双凸透镜</span>
-            </div>
-            <div class="equipment-item">
-              <span class="equipment-thumb support-thumb" aria-hidden="true"><i></i></span>
-              <span class="equipment-name">镜片支架</span>
-            </div>
-            <div class="equipment-item">
-              <span class="equipment-thumb screen-thumb" aria-hidden="true"><i></i></span>
-              <span class="equipment-name">像屏</span>
+            <div class="detector-card" aria-label="光斑显示">
+              <div class="detector-card-head">
+                <span>光斑显示</span>
+              </div>
+              <canvas id="detector-spot-canvas" width="260" height="160"></canvas>
             </div>
           </div>
-          <div id="experiment-canvas" class="three-canvas"></div>
-        </div>
-        <div class="ray-sim-card" aria-label="实时成像光路演示">
-          <div class="ray-sim-head">
-            <span>实时成像光路</span>
-            <output id="ray-sim-result">像距 -- cm</output>
-          </div>
-          <canvas id="ray-sim-canvas" width="720" height="280"></canvas>
-          <label class="ray-focal-control">焦距 f
-            <input id="ray-focal" type="range" min="6" max="28" step="0.5" value="12" />
-          </label>
         </div>
         <p class="hint">拖动画面中的器材可沿光具座移动；也可使用右侧参数面板精确调节。</p>
       </section>
 
       <aside class="lab-panel">
         <h2>实验控制</h2>
-        <label>实验模式
-          <select id="mode">
-            <option value="measure">测定模拟眼焦距</option>
-            <option value="correct">屈光不正矫正</option>
-            <option value="astig">散光矫正</option>
-          </select>
-        </label>
+        <input id="mode" type="hidden" value="measure" />
         <label>模拟眼
           <select id="eye-id">
             <option>A</option><option>B</option><option>C</option><option selected>D</option>
@@ -86,15 +77,15 @@
           </select>
         </label>
         <label>
-          <span class="range-label-row"><span>像屏位置</span><output id="screen-pos-value">24.00 cm</output></span>
+          <span class="range-label-row"><span>像屏位置</span><span class="position-input-wrap"><input id="screen-pos-value" class="position-number" type="number" min="14" max="36" step="0.25" value="24" aria-label="像屏位置数值" /><em>cm</em></span></span>
           <input id="screen-pos" type="range" min="14" max="36" step="0.25" value="24" />
         </label>
         <label>
-          <span class="range-label-row"><span>双凸透镜位置</span><output id="collimator-pos-value">-14.00 cm</output></span>
+          <span class="range-label-row"><span>双凸透镜位置</span><span class="position-input-wrap"><input id="collimator-pos-value" class="position-number" type="number" min="-24" max="-6" step="0.25" value="-14" aria-label="双凸透镜位置数值" /><em>cm</em></span></span>
           <input id="collimator-pos" type="range" min="-24" max="-6" step="0.25" value="-14" />
         </label>
         <label>
-          <span class="range-label-row"><span>物屏位置</span><output id="object-pos-value">-24.00 cm</output></span>
+          <span class="range-label-row"><span>物屏位置</span><span class="position-input-wrap"><input id="object-pos-value" class="position-number" type="number" min="-34" max="-12" step="0.25" value="-24" aria-label="物屏位置数值" /><em>cm</em></span></span>
           <input id="object-pos" type="range" min="-34" max="-12" step="0.25" value="-24" />
         </label>
         <label>矫正镜片
@@ -102,10 +93,17 @@
             <option value="none">不加入</option>
             <option value="concave">凹透镜</option>
             <option value="convex">凸透镜</option>
+            <option value="cylinder">柱面镜</option>
           </select>
         </label>
-        <label>镜片焦度 D <input id="lens-power" type="range" min="0" max="8" step="0.25" value="0" /></label>
-        <label>柱面镜角度 <input id="cylinder-angle" type="range" min="0" max="180" value="20" /></label>
+        <label data-lens-control="power">
+          <span class="range-label-row"><span>镜片焦度 D</span><span class="position-input-wrap"><input id="lens-power-value" class="position-number" type="number" min="0" max="8" step="0.25" value="0.00" aria-label="镜片焦度数值" /><em>D</em></span></span>
+          <input id="lens-power" type="range" min="0" max="8" step="0.25" value="0" />
+        </label>
+        <label data-lens-control="cylinder">
+          <span class="range-label-row"><span>柱面镜角度</span><span class="position-input-wrap"><input id="cylinder-angle-value" class="position-number" type="number" min="0" max="180" step="1" value="20" aria-label="柱面镜角度数值" /><em>°</em></span></span>
+          <input id="cylinder-angle" type="range" min="0" max="180" step="1" value="20" />
+        </label>
         <div class="readout" id="readout"></div>
         <button class="button primary" id="record-measurement">记录本次焦距</button>
         <button class="button" id="auto-correct">自动选择矫正镜片</button>
@@ -123,5 +121,6 @@
     </section>
     <script type="module" src="./src/main.js"></script>
     <script type="module" src="./src/pages/experiment.js?v=data-edit-1"></script>
+    <script type="module" src="./src/pages/free-bench-bootstrap.js"></script>
   </body>
 </html>

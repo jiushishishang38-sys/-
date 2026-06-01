@@ -7,6 +7,7 @@ const resultPanel = document.querySelector('.quiz-result');
 const scoreTitle = document.getElementById('quiz-score');
 const analysisList = document.getElementById('analysis-list');
 const restartButton = document.getElementById('restart-quiz');
+const knowledgeText = document.getElementById('quiz-knowledge-text');
 const answers = new Array(steps.length).fill(null);
 let current = 0;
 
@@ -23,11 +24,12 @@ function renderStep() {
 
   const answered = answers[current] !== null;
   const done = answers.every(Boolean);
+  knowledgeText.textContent = steps[current].dataset.knowledge || steps[current].dataset.explain || '';
   stepLabel.textContent = `第 ${current + 1} / ${steps.length} 题`;
   progressBar.style.width = `${((current + 1) / steps.length) * 100}%`;
   prevButton.disabled = current === 0;
   nextButton.disabled = !answered;
-  nextButton.textContent = current === steps.length - 1 ? '查看解析' : '下一题';
+  nextButton.textContent = current === steps.length - 1 ? '查看解析' : '下一题 >';
 
   if (done && current === steps.length - 1) {
     nextButton.disabled = false;

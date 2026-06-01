@@ -13,6 +13,10 @@ build/
 screenshots/
 .tools/
 .edge-profile/
+blender-*-windows-x64/
+blender-*-windows-x64.zip
+blender-*-windows-x64.msi
+verify-*.png
 *.log
 server-out.txt
 server-err.txt

@@ -4,13 +4,18 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node dev-server.mjs",
-    "preview:local": "node dev-server.mjs",
+    "dev": "vite --host 127.0.0.1 --port 4173",
+    "preview:local": "vite preview --host 127.0.0.1 --port 4173",
     "dev:vite": "vite --host 127.0.0.1",
     "test": "node scripts/run-tests.mjs",
     "build": "vite build"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
+    "gsap": "^3.15.0",
+    "lucide-react": "^1.17.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "three": "0.164.1"
   },
   "devDependencies": {

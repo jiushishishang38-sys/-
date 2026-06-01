@@ -3,13 +3,13 @@ const STORAGE_KEY = 'eye-lab-rows-v2';
 const ROW_IDS = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
 export const EYES = {
-  A: { id: 'A', focusCm: 17.6, note: '屈光系统偏强' },
-  B: { id: 'B', focusCm: 20.8, note: '轻度屈光偏强' },
-  C: { id: 'C', focusCm: 22.6, note: '接近正视但偏强' },
+  A: { id: 'A', focusCm: 15.4, note: '高度屈光偏强' },
+  B: { id: 'B', focusCm: 18.8, note: '中度屈光偏强' },
+  C: { id: 'C', focusCm: 21.7, note: '轻度屈光偏强' },
   D: { id: 'D', focusCm: 24.0, note: '正视眼校准' },
-  E: { id: 'E', focusCm: 26.4, note: '轻度屈光偏弱' },
-  F: { id: 'F', focusCm: 29.1, note: '屈光系统偏弱' },
-  G: { id: 'G', focusCm: 31.8, note: '明显屈光偏弱' },
+  E: { id: 'E', focusCm: 27.6, note: '轻度屈光偏弱' },
+  F: { id: 'F', focusCm: 31.4, note: '中度屈光偏弱' },
+  G: { id: 'G', focusCm: 35.2, note: '高度屈光偏弱' },
   S: { id: 'S', focusCm: 24.0, astigmatic: true, note: '散光眼' }
 };
 
@@ -139,7 +139,7 @@ export function updateRowWithMeasurement(rows, eyeId, valueCm, fittedPower) {
 
 export function normalizeLensPower(lensType, lensPower) {
   const power = Math.abs(Number(lensPower));
-  if (!Number.isFinite(power) || lensType === 'none') return 0;
+  if (!Number.isFinite(power) || lensType === 'none' || lensType === 'cylinder') return 0;
   return lensType === 'concave' ? -power : power;
 }
 
@@ -148,11 +148,16 @@ export function evaluateExperiment({ eyeId, screenCm, lensPower = 0, lensType = 
   const signedLens = normalizeLensPower(lensType, lensPower);
   const effectivePower = diopterFromCm(eye.focusCm) + signedLens;
   const focusCm = 100 / Math.max(0.2, effectivePower);
-  const target = eye.astigmatic ? RETINA_CM + Math.sin((cylinderAngle * Math.PI) / 90) * 2.2 : RETINA_CM;
+  const cylinderActive = lensType === 'cylinder';
+  const astigAngleTerm = Math.sin((cylinderAngle * Math.PI) / 90);
+  const correctedAstigTerm = cylinderActive ? astigAngleTerm * 0.26 : astigAngleTerm;
+  const target = eye.astigmatic ? RETINA_CM + correctedAstigTerm * 2.2 : RETINA_CM;
   const screenError = screenCm - focusCm;
   const retinaError = focusCm - target;
+  const astigResidual = eye.astigmatic ? Math.abs(correctedAstigTerm) : 0;
   const sharpness = Math.max(0, 1 - Math.abs(screenError) / 8);
   const retinaSharpness = Math.max(0, 1 - Math.abs(retinaError) / 7);
+  const spotRadius = estimateSpotRadiusCm(screenError, astigResidual);
   const type = eye.astigmatic ? '散光眼' : classifyEye(eye.focusCm);
   const correction = correctionPowerForEye(eye.focusCm);
   return {
@@ -160,6 +165,9 @@ export function evaluateExperiment({ eyeId, screenCm, lensPower = 0, lensType = 
     focusCm,
     screenError,
     retinaError,
+    spotRadius,
+    spotDiameter: spotRadius * 2,
+    astigResidual,
     sharpness,
     retinaSharpness,
     type,
@@ -167,36 +175,158 @@ export function evaluateExperiment({ eyeId, screenCm, lensPower = 0, lensType = 
     signedLensPower: signedLens,
     recommended: recommendedLens(correction),
     isClearOnScreen: Math.abs(screenError) < 0.8,
-    isCorrected: Math.abs(retinaError) < 0.8 || (eye.astigmatic && Math.abs(Math.sin((cylinderAngle * Math.PI) / 90)) < 0.18)
+    isCorrected: Math.abs(retinaError) < 0.8 || (eye.astigmatic && (cylinderActive || Math.abs(astigAngleTerm) < 0.18))
   };
+}
+
+function estimateSpotRadiusCm(screenError, astigResidual = 0) {
+  const defocus = Math.abs(screenError);
+  const focusPlateau = Math.sqrt(defocus * defocus + 0.42 * 0.42);
+  const radius = 0.34 + focusPlateau * 0.28 + Math.pow(defocus, 1.18) * 0.12 + astigResidual * 1.25;
+  return Number(Math.min(5.2, radius).toFixed(2));
+}
+
+export function estimateDetectorSpot(result) {
+  const spotRadius = Number(result.spotRadius ?? estimateSpotRadiusCm(result.screenError, result.astigResidual));
+  const spotDiameter = Number((spotRadius * 2).toFixed(2));
+  const peakSignal = Number(Math.max(0.04, Math.min(1, 1 / (1 + spotRadius * spotRadius * 0.55))).toFixed(2));
+  const clarity = spotDiameter < 1.2 ? '清晰小光斑' : spotDiameter < 3.2 ? '轻度离焦' : '明显弥散光斑';
+  return {
+    spotRadius,
+    spotDiameter,
+    peakSignal,
+    clarity,
+    ellipticity: Number((1 + (result.astigResidual ?? 0) * 1.35).toFixed(2)),
+    hitCount: 7
+  };
+}
+
+export function sampleFocusMeasurement({ eyeId, screenCm, lensPower = 0, lensType = 'none', cylinderAngle = 0 }) {
+  const result = evaluateExperiment({ eyeId, screenCm, lensPower, lensType, cylinderAngle });
+  const spot = estimateDetectorSpot(result);
+  const uncertainty = 0.08 + Math.min(0.46, spot.spotRadius * 0.08);
+  const signedNoise = (Math.random() - 0.5) * 2 * uncertainty;
+  const operatorBias = result.eye.astigmatic ? Math.sin((cylinderAngle * Math.PI) / 180) * 0.18 : 0;
+  const measured = Number(screenCm) + signedNoise + operatorBias;
+  return Number(Math.max(14, Math.min(36, measured)).toFixed(2));
+}
+
+const TEACHING_CM_TO_WORLD = 0.25;
+const TEACHING_COLLIMATOR_APERTURE_CM = 5.2;
+const TEACHING_CORRECTION_APERTURE_CM = 3.4;
+const TEACHING_EYE_APERTURE_CM = 3.2;
+const TEACHING_SCREEN_HALF_HEIGHT_CM = 4.2;
+const TEACHING_SCREEN_HALF_WIDTH_CM = 2.9;
+
+function toWorldPoint(point) {
+  return [
+    point[0] * TEACHING_CM_TO_WORLD,
+    point[1] * TEACHING_CM_TO_WORLD,
+    point[2] * TEACHING_CM_TO_WORLD
+  ];
+}
+
+function appendTeachingPoint(path, ray) {
+  path.push(toWorldPoint([ray.x, ray.y, ray.z]));
+}
+
+function propagateTeachingRay(ray, path, x, apertureRadius = Infinity) {
+  const dx = x - ray.x;
+  ray.y += ray.slopeY * dx;
+  ray.z += ray.slopeZ * dx;
+  ray.x = x;
+  appendTeachingPoint(path, ray);
+  return Math.hypot(ray.y, ray.z) <= apertureRadius;
+}
+
+function applyTeachingLens(ray, focalLengthCm, axisScale = 1) {
+  if (!Number.isFinite(focalLengthCm) || Math.abs(focalLengthCm) < 0.2) return;
+  ray.slopeY -= ray.y / focalLengthCm;
+  ray.slopeZ -= (ray.z / focalLengthCm) * axisScale;
+}
+
+function traceTeachingRay({
+  objectCm,
+  collimatorCm,
+  correctionCm,
+  eyeCm,
+  screenCm,
+  objectY,
+  collimatorY,
+  collimatorZ,
+  correctionFocalCm,
+  eyeFocalCm,
+  astigmatic,
+  cylinderAngle
+}) {
+  const safeCollimatorCm = Math.abs(collimatorCm - objectCm) < 1 ? objectCm + 1 : collimatorCm;
+  const ray = {
+    x: objectCm,
+    y: objectY,
+    z: 0,
+    slopeY: (collimatorY - objectY) / (safeCollimatorCm - objectCm),
+    slopeZ: collimatorZ / (safeCollimatorCm - objectCm)
+  };
+  const path = [];
+  appendTeachingPoint(path, { x: Math.min(-28, objectCm - 3), y: objectY, z: 0 });
+  appendTeachingPoint(path, ray);
+
+  const collimatorFocalCm = Math.max(3, Math.abs(safeCollimatorCm - objectCm));
+  if (!propagateTeachingRay(ray, path, collimatorCm, TEACHING_COLLIMATOR_APERTURE_CM)) return path;
+  applyTeachingLens(ray, collimatorFocalCm);
+
+  if (correctionFocalCm) {
+    if (!propagateTeachingRay(ray, path, correctionCm, TEACHING_CORRECTION_APERTURE_CM)) return path;
+    applyTeachingLens(ray, correctionFocalCm);
+  } else {
+    propagateTeachingRay(ray, path, correctionCm, Infinity);
+  }
+
+  if (!propagateTeachingRay(ray, path, eyeCm, TEACHING_EYE_APERTURE_CM)) return path;
+  const astigAmount = astigmatic ? Math.sin((cylinderAngle * Math.PI) / 90) * 0.22 : 0;
+  applyTeachingLens(ray, eyeFocalCm, 1 + astigAmount);
+
+  propagateTeachingRay(ray, path, screenCm, Infinity);
+  const screenMiss = Math.abs(ray.y) > TEACHING_SCREEN_HALF_HEIGHT_CM || Math.abs(ray.z) > TEACHING_SCREEN_HALF_WIDTH_CM;
+  if (screenMiss) {
+    const last = path[path.length - 1];
+    last[1] = Math.max(-TEACHING_SCREEN_HALF_HEIGHT_CM, Math.min(TEACHING_SCREEN_HALF_HEIGHT_CM, ray.y)) * TEACHING_CM_TO_WORLD;
+    last[2] = Math.max(-TEACHING_SCREEN_HALF_WIDTH_CM, Math.min(TEACHING_SCREEN_HALF_WIDTH_CM, ray.z)) * TEACHING_CM_TO_WORLD;
+  }
+  return path;
 }
 
 export function traceTeachingRays({ eyeId, lensType, lensPower, screenCm, cylinderAngle, objectCm = -24, collimatorCm = -14 }) {
   const result = evaluateExperiment({ eyeId, lensType, lensPower, screenCm, cylinderAngle });
-  const sourceX = -7;
-  const objectX = objectCm / 4;
-  const collimatorX = collimatorCm / 4;
-  const correctionX = -1.35;
-  const eyeX = 0;
-  const focusX = result.focusCm / 4;
-  const screenX = screenCm / 4;
-  const lensStrength = Math.min(Math.abs(normalizeLensPower(lensType, lensPower)) / 8, 1);
-  const correctionScale = lensType === 'concave'
-    ? 0.82 + lensStrength * 0.28
-    : lensType === 'convex'
-      ? 0.72 - lensStrength * 0.22
-      : 0.78;
-  const astigOffset = (EYES[eyeId] || EYES.D).astigmatic ? Math.sin((cylinderAngle * Math.PI) / 90) * 0.18 : 0;
-  const rays = [-1.2, 0, 1.2].map((y) => [
-    [Math.min(sourceX - 0.8, objectX - 0.8), y, 0],
-    [objectX, y, 0],
-    [collimatorX, y * 0.35, 0],
-    [correctionX, y * correctionScale + astigOffset, 0],
-    [eyeX, y * 0.45 + astigOffset * 0.55, 0],
-    [focusX, 0, 0],
-    [screenX, result.screenError * 0.08 + y * 0.05, 0]
-  ]);
-  return { rays, result };
+  const eye = EYES[eyeId] || EYES.D;
+  const signedLensPower = normalizeLensPower(lensType, lensPower);
+  const correctionFocalCm = Math.abs(signedLensPower) > 0.01 ? 100 / signedLensPower : 0;
+  const correctionCm = -1.35 / TEACHING_CM_TO_WORLD;
+  const eyeCm = 0;
+  const samples = [
+    [-TEACHING_COLLIMATOR_APERTURE_CM * 0.78, 0],
+    [-TEACHING_COLLIMATOR_APERTURE_CM * 0.38, 0],
+    [0, 0],
+    [TEACHING_COLLIMATOR_APERTURE_CM * 0.38, 0],
+    [TEACHING_COLLIMATOR_APERTURE_CM * 0.78, 0],
+    [0, -TEACHING_COLLIMATOR_APERTURE_CM * 0.42],
+    [0, TEACHING_COLLIMATOR_APERTURE_CM * 0.42]
+  ];
+  const rays = samples.map(([collimatorY, collimatorZ]) => traceTeachingRay({
+    objectCm,
+    collimatorCm,
+    correctionCm,
+    eyeCm,
+    screenCm,
+    objectY: 0,
+    collimatorY,
+    collimatorZ,
+    correctionFocalCm,
+    eyeFocalCm: eye.focusCm,
+    astigmatic: Boolean(eye.astigmatic) && lensType !== 'cylinder',
+    cylinderAngle
+  }));
+  return { rays, result, spot: estimateDetectorSpot(result) };
 }
 
 function formatTableValue(value) {

@@ -10,7 +10,10 @@ const types = {
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.png': 'image/png',
-  '.jpg': 'image/jpeg'
+  '.jpg': 'image/jpeg',
+  '.mp4': 'video/mp4',
+  '.glb': 'model/gltf-binary',
+  '.gltf': 'model/gltf+json'
 };
 
 createServer((req, res) => {

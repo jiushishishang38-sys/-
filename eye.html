@@ -1,51 +1,1190 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>眼球 3D 结构模型</title>
-    <link rel="stylesheet" href="./src/styles/app.css" />
-  </head>
-  <body data-page="eye">
-    <header class="site-header">
-      <a class="brand" href="./index.html">屈光模拟实验平台</a>
-      <nav class="nav">
-        <a href="./guide.html">课前引导</a>
-        <a href="./experiment.html">3D 光具座</a>
-        <a href="./eye.html">眼球 3D</a>
-        <a href="./quiz.html">课堂检测</a>
-        <a href="./report.html">实验报告</a>
-      </nav>
-    </header>
-    <main class="lab-layout eye-layout">
-      <section class="lab-stage">
-        <div class="stage-head">
-          <div>
-            <p class="eyebrow">结构剖面与光路观察</p>
-            <h1>眼球 3D 结构模型</h1>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>屈光模拟实验平台 - 基础知识</title>
+  <style>
+    :root {
+      --ink: #10121c;
+      --muted: #626a80;
+      --line: rgba(102, 92, 170, 0.14);
+      --violet: #5635f2;
+      --violet-2: #7a5cff;
+      --cyan: #19b7ff;
+      --amber: #f4b000;
+      --green: #32c64d;
+      --card: rgba(255, 255, 255, 0.86);
+      --shadow: 0 18px 46px rgba(58, 50, 126, 0.12);
+      --soft: 0 10px 28px rgba(58, 50, 126, 0.08);
+      --nav-h: 82px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+      background:
+        linear-gradient(rgba(91, 98, 148, 0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(91, 98, 148, 0.055) 1px, transparent 1px),
+        radial-gradient(circle at 52% 20%, rgba(122, 92, 255, 0.08), transparent 34%),
+        #f7f7fb;
+      background-size: 78px 78px, 78px 78px, auto, auto;
+      overflow-x: hidden;
+    }
+
+    .topbar {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 30;
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 36px;
+      background: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid rgba(116, 125, 160, 0.14);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 22px;
+      font-weight: 950;
+    }
+
+    .logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: conic-gradient(from 28deg, #31d4ff, #7955ff, #ff78d2, #ffffff, #38bdf8);
+      box-shadow: 0 8px 18px rgba(91, 53, 213, 0.24);
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .logo::after {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border-radius: inherit;
+      background: rgba(255, 255, 255, 0.92);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 54px;
+      height: 100%;
+      color: #22283a;
+      font-size: 17px;
+      font-weight: 850;
+    }
+
+    .nav a {
+      position: relative;
+      display: grid;
+      place-items: center;
+      height: 100%;
+      color: inherit;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .nav a.active { color: var(--violet); }
+
+    .nav a.active::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 86px;
+      height: 3px;
+      border-radius: 999px;
+      background: var(--violet-2);
+      transform: translateX(-50%);
+    }
+
+    .page {
+      min-height: 100vh;
+      padding: 112px clamp(28px, 4vw, 76px) 42px;
+    }
+
+    .intro {
+      position: relative;
+      z-index: 5;
+      max-width: 1120px;
+      margin-bottom: 20px;
+    }
+
+    .eyebrow {
+      color: var(--violet);
+      font-size: 17px;
+      font-weight: 950;
+      margin-bottom: 14px;
+    }
+
+    .eyebrow::before {
+      content: "";
+      display: inline-block;
+      width: 18px;
+      height: 2px;
+      margin-right: 10px;
+      vertical-align: middle;
+      background: rgba(109, 74, 255, 0.55);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(42px, 4.2vw, 64px);
+      line-height: 1.08;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .intro p {
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.7;
+      font-weight: 650;
+    }
+
+    .module-switch {
+      position: relative;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(150px, 1fr));
+      gap: 8px;
+      width: min(100%, 1050px);
+      margin: 24px 0 30px;
+      padding: 8px;
+      border: 1px solid rgba(109, 74, 255, 0.18);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: var(--soft);
+      backdrop-filter: blur(18px);
+    }
+
+    .module-switch button {
+      min-height: 58px;
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border: 0;
+      border-radius: 16px;
+      background: transparent;
+      color: #30364b;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    }
+
+    .module-switch button:hover { transform: translateY(-2px); }
+
+    .module-switch button.is-active {
+      color: #fff;
+      background: linear-gradient(135deg, var(--violet), var(--violet-2));
+      box-shadow: 0 14px 30px rgba(91, 53, 213, 0.22);
+    }
+
+    .module-switch strong {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(109, 74, 255, 0.12);
+      color: var(--violet);
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .module-switch button.is-active strong {
+      background: rgba(255, 255, 255, 0.18);
+      color: #fff;
+    }
+
+    .module-switch span {
+      min-width: 0;
+      font-size: 15px;
+      font-weight: 950;
+      line-height: 1.2;
+    }
+
+    .knowledge-page {
+      display: none;
+      animation: fadeUp 420ms ease both;
+    }
+
+    .knowledge-page.is-active { display: block; }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: minmax(220px, 280px) minmax(560px, 1fr) minmax(220px, 280px);
+      gap: clamp(22px, 3vw, 42px);
+      align-items: center;
+      max-width: 1760px;
+      margin: 0 auto;
+    }
+
+    .stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .info-card,
+    .lens-card,
+    .case-card,
+    .check-card,
+    .variable-card,
+    .step-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--card);
+      box-shadow: var(--soft);
+      backdrop-filter: blur(16px);
+    }
+
+    .info-card {
+      display: grid;
+      grid-template-columns: 62px 1fr;
+      gap: 16px;
+      align-items: center;
+      min-height: 116px;
+      padding: 18px;
+    }
+
+    .info-card h2,
+    .lens-card h2,
+    .case-card h2,
+    .check-card h2,
+    .variable-card h3,
+    .step-card h3 {
+      margin: 0 0 7px;
+      color: var(--violet);
+      font-size: 18px;
+      font-weight: 950;
+    }
+
+    .info-card p,
+    .lens-card p,
+    .case-card p,
+    .check-card p,
+    .variable-card p,
+    .step-card p {
+      margin: 0;
+      color: #35405b;
+      font-size: 15px;
+      line-height: 1.65;
+      font-weight: 650;
+    }
+
+    .icon-badge {
+      width: 58px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--violet);
+      background: linear-gradient(145deg, rgba(109, 74, 255, 0.13), rgba(255, 255, 255, 0.95));
+      box-shadow: inset 0 0 0 1px rgba(109, 74, 255, 0.08);
+      font-size: 30px;
+      font-weight: 950;
+    }
+
+    .thumb-img {
+      width: 58px;
+      height: 58px;
+      object-fit: cover;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(109, 74, 255, 0.08), 0 10px 18px rgba(45, 39, 105, 0.08);
+    }
+
+    .stage {
+      position: relative;
+      min-height: 560px;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+    }
+
+    .stage::before,
+    .stage::after {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      left: 50%;
+      top: 48%;
+      width: min(760px, 72vw);
+      aspect-ratio: 1;
+      border: 1px solid rgba(109, 74, 255, 0.08);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .stage::after {
+      width: min(560px, 56vw);
+      border-style: dashed;
+      opacity: 0.58;
+    }
+
+    .eye-image {
+      position: relative;
+      z-index: 1;
+      display: block;
+      width: min(100%, 900px);
+      height: auto;
+      filter: drop-shadow(0 30px 34px rgba(35, 38, 74, 0.17));
+    }
+
+    .tip {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 18px;
+      align-items: center;
+      width: min(920px, 100%);
+      margin: 24px auto 0;
+      padding: 18px 26px;
+      border: 1px solid rgba(109, 74, 255, 0.14);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.88);
+      box-shadow: 0 18px 46px rgba(91, 53, 213, 0.12);
+      backdrop-filter: blur(18px);
+    }
+
+    .tip h3 {
+      margin: 0 0 4px;
+      color: var(--violet);
+      font-size: 17px;
+      font-weight: 950;
+    }
+
+    .tip p {
+      margin: 0;
+      color: #4f586e;
+      font-size: 15px;
+      line-height: 1.65;
+      font-weight: 650;
+    }
+
+    .vision-flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(130px, 1fr));
+      gap: 28px;
+      align-items: stretch;
+      max-width: 1220px;
+      margin: 12px auto 0;
+    }
+
+    .step-card {
+      position: relative;
+      min-height: 330px;
+      padding: 20px 18px;
+      display: grid;
+      grid-template-rows: 42px 40px 1fr auto;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .step-card:not(:last-child)::after {
+      content: "›";
+      position: absolute;
+      right: -24px;
+      top: 47%;
+      color: var(--violet-2);
+      font-size: 42px;
+      font-weight: 950;
+    }
+
+    .step-no {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      color: #fff;
+      background: linear-gradient(135deg, var(--violet), var(--violet-2));
+      font-size: 19px;
+      font-weight: 950;
+    }
+
+    .step-art {
+      width: 100%;
+      height: 156px;
+      display: grid;
+      place-items: center;
+    }
+
+    .step-art img {
+      max-width: 118%;
+      max-height: 170px;
+      object-fit: contain;
+      filter: drop-shadow(0 18px 22px rgba(35, 38, 74, 0.14));
+    }
+
+    .ray-svg {
+      width: 100%;
+      max-width: 220px;
+      height: 120px;
+    }
+
+    .ray { stroke: var(--amber); stroke-width: 3; fill: none; marker-end: url(#arrow); }
+    .ray-soft { stroke: #7a5cff; stroke-width: 3; fill: none; opacity: 0.55; }
+    .axis { stroke: #9da5ba; stroke-width: 2; stroke-dasharray: 7 7; }
+    .retina-line { stroke: #8981aa; stroke-width: 2; stroke-dasharray: 6 6; }
+    .focus-dot { fill: var(--violet-2); filter: drop-shadow(0 0 4px rgba(122, 92, 255, 0.5)); }
+
+    .brain {
+      width: 150px;
+      height: 116px;
+      border-radius: 48% 52% 44% 50%;
+      background:
+        radial-gradient(circle at 34% 36%, #fff6 0 4px, transparent 5px),
+        radial-gradient(circle at 62% 48%, #fff6 0 4px, transparent 5px),
+        linear-gradient(135deg, #c4a7ff, #6e55df);
+      box-shadow: inset 0 -12px 18px rgba(55, 35, 160, 0.22), 0 18px 28px rgba(91, 53, 213, 0.18);
+      position: relative;
+    }
+
+    .brain::before,
+    .brain::after {
+      content: "";
+      position: absolute;
+      inset: 20px 18px;
+      border: 2px solid rgba(255,255,255,0.52);
+      border-left: 0;
+      border-bottom: 0;
+      border-radius: 50%;
+      transform: rotate(-18deg);
+    }
+
+    .brain::after {
+      inset: 34px 34px 24px 24px;
+      transform: rotate(20deg);
+    }
+
+    .exploded-wrap {
+      display: grid;
+      grid-template-columns: minmax(190px, 240px) minmax(650px, 1fr) minmax(210px, 260px);
+      gap: 38px;
+      align-items: center;
+      max-width: 1720px;
+      margin: 0 auto;
+    }
+
+    .explode-assembly {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(6px, 1vw, 16px);
+      min-height: 420px;
+    }
+
+    .structure-piece {
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      opacity: 0.75;
+      filter: saturate(0.92);
+      transition: transform 180ms ease, opacity 180ms ease, filter 180ms ease;
+    }
+
+    .structure-piece:hover,
+    .structure-piece:focus-visible,
+    .structure-piece.is-active {
+      opacity: 1;
+      filter: saturate(1.08);
+      transform: translateY(-6px) scale(1.035);
+      outline: none;
+    }
+
+    .structure-piece.is-active img {
+      filter: drop-shadow(0 0 18px rgba(109, 74, 255, 0.52)) drop-shadow(0 24px 26px rgba(35, 38, 74, 0.14));
+    }
+
+    .structure-piece img {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 22px 24px rgba(35, 38, 74, 0.12));
+    }
+
+    .piece-cornea img { height: clamp(140px, 12vw, 210px); }
+    .piece-iris img { height: clamp(140px, 12vw, 210px); }
+    .piece-lens img { height: clamp(138px, 11.5vw, 200px); }
+    .piece-ciliary img { height: clamp(158px, 13vw, 230px); }
+    .piece-vitreous img { height: clamp(176px, 14vw, 250px); }
+    .piece-retina img { height: clamp(210px, 17vw, 300px); }
+    .piece-nerve img { height: clamp(58px, 5vw, 90px); }
+
+    .flow-line {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(70px, 1fr));
+      gap: 0;
+      width: min(100%, 1040px);
+      margin: -20px auto 0;
+      padding-top: 18px;
+      border-top: 1px solid rgba(109, 74, 255, 0.24);
+    }
+
+    .flow-line button {
+      position: relative;
+      border: 0;
+      background: transparent;
+      color: #33384b;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .flow-line button::before {
+      content: "";
+      position: absolute;
+      top: -23px;
+      left: 50%;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--violet-2);
+      box-shadow: 0 0 0 5px rgba(109, 74, 255, 0.08);
+      transform: translateX(-50%);
+    }
+
+    .flow-line button.is-active { color: var(--violet); }
+
+    .cases-layout {
+      display: grid;
+      grid-template-columns: minmax(620px, 1fr) minmax(280px, 380px);
+      gap: 36px;
+      max-width: 1720px;
+      margin: 0 auto;
+      align-items: stretch;
+    }
+
+    .case-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    .case-card {
+      padding: 22px 24px 18px;
+    }
+
+    .case-card h2 {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 24px;
+    }
+
+    .case-card h2 span,
+    .check-symbol {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      color: #fff;
+      background: linear-gradient(135deg, var(--violet), var(--violet-2));
+      font-size: 18px;
+      font-weight: 950;
+    }
+
+    .case-diagram {
+      height: 190px;
+      margin: 8px 0 14px;
+      display: grid;
+      place-items: center;
+    }
+
+    .case-diagram svg,
+    .lens-diagram svg,
+    .mini-diagram svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(109, 74, 255, 0.1);
+      color: #373b63;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .tag.good {
+      background: rgba(50, 198, 77, 0.12);
+      color: #22943a;
+    }
+
+    .check-panel {
+      padding: 34px 30px;
+      border: 1px solid rgba(109, 74, 255, 0.28);
+      border-radius: 22px;
+      background: rgba(255,255,255,0.74);
+      box-shadow: var(--shadow);
+    }
+
+    .check-panel h2 {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 0 0 24px;
+      color: var(--violet);
+      font-size: 28px;
+      font-weight: 950;
+    }
+
+    .check-card {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      align-items: center;
+      gap: 16px;
+      min-height: 92px;
+      margin-top: 16px;
+      padding: 16px;
+    }
+
+    .lens-layout {
+      display: grid;
+      grid-template-columns: minmax(650px, 1fr) minmax(360px, 520px);
+      gap: 30px;
+      max-width: 1720px;
+      margin: 0 auto;
+      align-items: stretch;
+    }
+
+    .lens-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .lens-card {
+      min-height: 300px;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    .lens-card h2 {
+      font-size: 26px;
+    }
+
+    .lens-diagram {
+      height: 190px;
+      margin: 6px 0 12px;
+    }
+
+    .variables {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(130px, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.72);
+      box-shadow: var(--soft);
+    }
+
+    .variable-card {
+      padding: 16px;
+      min-height: 146px;
+    }
+
+    .formula {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 70px;
+      border: 1px solid rgba(109, 74, 255, 0.18);
+      border-radius: 14px;
+      color: var(--violet);
+      background: rgba(109, 74, 255, 0.04);
+      font-size: 28px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-style: italic;
+    }
+
+    .prep-card {
+      padding: 28px 32px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(255,255,255,0.82);
+      box-shadow: var(--soft);
+    }
+
+    .prep-card h2 {
+      margin: 0 0 18px;
+      color: var(--violet);
+      font-size: 24px;
+      font-weight: 950;
+    }
+
+    .prep-card ol {
+      display: grid;
+      gap: 16px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: prep;
+    }
+
+    .prep-card li {
+      counter-increment: prep;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: center;
+      color: #3f475e;
+      font-size: 16px;
+      line-height: 1.55;
+      font-weight: 750;
+    }
+
+    .prep-card li::before {
+      content: counter(prep);
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      color: #fff;
+      background: linear-gradient(135deg, var(--violet), var(--violet-2));
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      width: min(100%, 330px);
+      min-height: 76px;
+      margin-top: 28px;
+      border-radius: 18px;
+      color: #fff;
+      text-decoration: none;
+      background: linear-gradient(135deg, var(--violet), var(--violet-2));
+      box-shadow: 0 18px 34px rgba(91, 53, 213, 0.28);
+      font-size: 24px;
+      font-weight: 950;
+    }
+
+    .cta span { font-size: 34px; line-height: 1; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (min-width: 2200px) {
+      :root { --nav-h: 128px; }
+      .topbar { padding-inline: 58px; }
+      .brand { font-size: 36px; gap: 26px; }
+      .logo { width: 66px; height: 66px; }
+      .logo::after { inset: 12px; }
+      .nav { gap: 88px; font-size: 28px; }
+      .page { padding-top: 172px; }
+      .eyebrow { font-size: 28px; }
+      .intro p { font-size: 30px; }
+      h1 { font-size: 92px; }
+      .module-switch { max-width: 1680px; }
+      .module-switch button { min-height: 86px; }
+      .module-switch span { font-size: 24px; }
+      .module-switch strong { width: 54px; height: 54px; font-size: 23px; }
+      .info-card p, .lens-card p, .case-card p, .check-card p, .variable-card p, .step-card p, .tip p { font-size: 24px; }
+      .info-card h2, .lens-card h2, .case-card h2, .check-card h2, .variable-card h3, .step-card h3, .tip h3 { font-size: 30px; }
+    }
+
+    @media (max-width: 1300px) {
+      .topbar { padding-inline: 24px; }
+      .nav { gap: 28px; font-size: 15px; }
+      .module-switch { grid-template-columns: repeat(3, minmax(170px, 1fr)); }
+      .grid-3,
+      .exploded-wrap,
+      .cases-layout,
+      .lens-layout { grid-template-columns: 1fr; }
+      .stack { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+      .vision-flow { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+      .step-card:not(:last-child)::after { display: none; }
+      .case-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 760px) {
+      .topbar { position: static; height: auto; padding: 18px; align-items: flex-start; gap: 18px; }
+      .brand { font-size: 19px; }
+      .nav { flex-wrap: wrap; justify-content: flex-end; gap: 16px 22px; font-size: 14px; }
+      .nav a { height: auto; padding-bottom: 8px; }
+      .page { padding: 28px 18px 34px; }
+      .module-switch,
+      .vision-flow,
+      .stack,
+      .lens-grid,
+      .variables { grid-template-columns: 1fr; }
+      h1 { font-size: 38px; }
+      .stage { min-height: 360px; }
+      .flow-line { grid-template-columns: repeat(2, 1fr); gap: 14px; border-top: 0; }
+      .flow-line button::before { display: none; }
+      .explode-assembly { overflow-x: auto; justify-content: flex-start; padding-bottom: 12px; }
+      .tip { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html" aria-label="返回首页">
+      <span class="logo" aria-hidden="true"></span>
+      <span>屈光模拟实验平台</span>
+    </a>
+    <nav class="nav" aria-label="主导航">
+      <a href="./guide.html">课前引导</a>
+      <a class="active" href="./eye.html">基础知识</a>
+      <a href="./experiment.html">模拟实验</a>
+      <a href="./report.html">实验报告</a>
+      <a href="./quiz.html">知识夯实</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="intro" aria-live="polite">
+      <div class="eyebrow" id="moduleEyebrow">基础知识 · 01</div>
+      <h1 id="moduleTitle">从光线到视觉</h1>
+      <p id="moduleLead">理解外界光线如何经过人眼并最终形成视觉，是进入屈光实验前的第一步。</p>
+    </section>
+
+    <div class="module-switch" role="tablist" aria-label="基础知识模块切换">
+      <button class="is-active" type="button" role="tab" aria-selected="true" data-module="vision"><strong>01</strong><span>从光线到视觉</span></button>
+      <button type="button" role="tab" aria-selected="false" data-module="structure"><strong>02</strong><span>结构与光学特性</span></button>
+      <button type="button" role="tab" aria-selected="false" data-module="exploded"><strong>03</strong><span>人眼结构分解图</span></button>
+      <button type="button" role="tab" aria-selected="false" data-module="ametropia"><strong>04</strong><span>屈光不正判断</span></button>
+      <button type="button" role="tab" aria-selected="false" data-module="correction"><strong>05</strong><span>镜片如何矫正</span></button>
+    </div>
+
+    <section class="knowledge-page is-active" data-page="vision" aria-label="从光线到视觉">
+      <div class="grid-3">
+        <aside class="stack">
+          <article class="info-card"><div class="icon-badge">☼</div><div><h2>光源</h2><p>光源发出的光线向各个方向传播，进入人眼。</p></div></article>
+          <article class="info-card"><div class="icon-badge">△</div><div><h2>折射</h2><p>光线通过角膜和晶状体时发生折射，改变传播方向。</p></div></article>
+          <article class="info-card"><div class="icon-badge">▣</div><div><h2>成像</h2><p>折射后的光线在视网膜上形成清晰的像。</p></div></article>
+        </aside>
+
+        <section>
+          <div class="vision-flow">
+            <article class="step-card">
+              <div class="step-no">1</div><h3>光线进入</h3>
+              <div class="step-art">
+                <svg class="ray-svg" viewBox="0 0 230 130" aria-hidden="true">
+                  <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#f4b000"/></marker></defs>
+                  <path d="M8 24h196" class="ray"/><path d="M8 56h196" class="ray"/><path d="M8 88h196" class="ray"/>
+                  <path d="M34 102c14-30 18-50 16-78 28 18 42 42 40 78-18 8-36 8-56 0Z" fill="#72b849"/>
+                  <path d="M47 102v18" stroke="#7b4d1c" stroke-width="7"/>
+                </svg>
+              </div>
+              <p>来自物体的光线进入人眼。</p>
+            </article>
+            <article class="step-card">
+              <div class="step-no">2</div><h3>角膜/晶状体折射</h3>
+              <div class="step-art"><img src="./eye-cornea.png" alt="角膜折射示意" /></div>
+              <p>光线依次通过角膜和晶状体发生折射，逐渐会聚。</p>
+            </article>
+            <article class="step-card">
+              <div class="step-no">3</div><h3>视网膜成像</h3>
+              <div class="step-art"><img src="./eye-retina.png" alt="视网膜成像示意" /></div>
+              <p>光线在视网膜上形成倒立、缩小的实像。</p>
+            </article>
+            <article class="step-card">
+              <div class="step-no">4</div><h3>视神经传导</h3>
+              <div class="step-art"><img src="./eye-nerve.png" alt="视神经传导示意" /></div>
+              <p>视网膜上的信息通过视神经传递到大脑。</p>
+            </article>
+            <article class="step-card">
+              <div class="step-no">5</div><h3>大脑识别</h3>
+              <div class="step-art"><div class="brain" aria-hidden="true"></div></div>
+              <p>大脑对接收到的信号进行处理与识别，形成视觉。</p>
+            </article>
           </div>
-          <div class="view-buttons">
-            <button data-eye-action="section">剖面结构</button>
-            <button data-eye-action="whole">整体观察</button>
-            <button data-eye-action="explode">结构拆解</button>
-            <button data-eye-action="rays">屈光路径</button>
-            <button data-eye-action="reset">复位</button>
+          <article class="tip"><div class="icon-badge">?</div><div><h3>小知识</h3><p>视网膜成像是倒立、缩小的实像，但我们看到的世界是正立的、真实的，这是因为大脑对图像进行了处理与理解。</p></div></article>
+        </section>
+
+        <aside class="stack">
+          <article class="info-card"><div class="icon-badge">⠿</div><div><h2>感光</h2><p>视网膜上的感光细胞将光信号转化为神经信号。</p></div></article>
+          <article class="info-card"><div class="icon-badge">✣</div><div><h2>传导</h2><p>神经信号沿视神经快速传递至大脑视觉中枢。</p></div></article>
+          <article class="info-card"><div class="icon-badge">☁</div><div><h2>视觉</h2><p>大脑整合与解释信号，理解物体的形状、颜色与位置。</p></div></article>
+        </aside>
+      </div>
+    </section>
+
+    <section class="knowledge-page" data-page="structure" aria-label="人眼结构与光学特性">
+      <div class="grid-3">
+        <aside class="stack">
+          <article class="info-card"><img class="thumb-img" src="./eye-cornea.png" alt="" /><div><h2>角膜</h2><p>透明无血管，保护眼内结构并参与屈光。</p></div></article>
+          <article class="info-card"><img class="thumb-img" src="./eye-iris.png" alt="" /><div><h2>虹膜</h2><p>控制瞳孔大小，调节进入眼内的光量。</p></div></article>
+          <article class="info-card"><img class="thumb-img" src="./eye-lens.png" alt="" /><div><h2>晶状体</h2><p>透明可调节，改变曲率，实现精确聚焦。</p></div></article>
+          <article class="info-card"><img class="thumb-img" src="./eye-ciliary.png" alt="" /><div><h2>睫状体</h2><p>调节晶状体曲率，实现不同距离的清晰视物。</p></div></article>
+          <article class="info-card"><img class="thumb-img" src="./eye-vitreous.png" alt="" /><div><h2>玻璃体</h2><p>透明胶状物质，维持眼球形态并传递光线。</p></div></article>
+          <article class="info-card"><img class="thumb-img" src="./eye-retina.png" alt="" /><div><h2>视网膜</h2><p>含感光细胞，接收光信号并转化为神经信号。</p></div></article>
+        </aside>
+        <section class="stage">
+          <img class="eye-image" src="./eye.png" alt="高清 3D 人眼结构与光学特性模型" />
+          <article class="tip"><div class="icon-badge">?</div><div><h3>小知识</h3><p>人眼的屈光系统相当于一台精密的光学仪器。角膜和晶状体共同作用，将外界物体反射的光线聚焦在视网膜上，形成清晰的像。</p></div></article>
+        </section>
+        <aside class="stack">
+          <article class="info-card"><div class="icon-badge">◎</div><div><h2>透明结构</h2><p>角膜、晶状体、玻璃体等透明结构协同工作，保证光线顺利通过。</p></div></article>
+          <article class="info-card"><div class="icon-badge">◐</div><div><h2>屈光系统</h2><p>角膜提供主要屈光力，晶状体调节焦距，实现清晰成像。</p></div></article>
+          <article class="info-card"><div class="icon-badge">◉</div><div><h2>感光与成像</h2><p>视网膜感光细胞接收光线，将光信号转化为神经信号。</p></div></article>
+          <article class="info-card"><div class="icon-badge">⌁</div><div><h2>神经传导</h2><p>视神经将信号传输至大脑视觉中枢，完成视觉信息处理。</p></div></article>
+        </aside>
+      </div>
+    </section>
+
+    <section class="knowledge-page" data-page="exploded" aria-label="人眼结构分解图">
+      <div class="exploded-wrap">
+        <aside class="stack">
+          <article class="info-card" data-part-card="cornea"><div class="icon-badge">C</div><div><h2>角膜</h2><p>透明无血管，屈光力最强的屈光结构。</p></div></article>
+          <article class="info-card" data-part-card="iris"><div class="icon-badge">I</div><div><h2>虹膜</h2><p>控制瞳孔大小，调节进入眼内的光量。</p></div></article>
+          <article class="info-card" data-part-card="lens"><div class="icon-badge">L</div><div><h2>晶状体</h2><p>透明可调节的双凸透镜，改变屈光力。</p></div></article>
+        </aside>
+        <section>
+          <div class="explode-assembly" aria-label="按光路顺序排列的人眼结构分解图">
+            <button class="structure-piece piece-cornea is-active" type="button" data-part="cornea" aria-label="高亮角膜"><img src="./eye-cornea.png" alt="" /></button>
+            <button class="structure-piece piece-iris" type="button" data-part="iris" aria-label="高亮虹膜"><img src="./eye-iris.png" alt="" /></button>
+            <button class="structure-piece piece-lens" type="button" data-part="lens" aria-label="高亮晶状体"><img src="./eye-lens.png" alt="" /></button>
+            <button class="structure-piece piece-ciliary" type="button" data-part="ciliary" aria-label="高亮睫状体"><img src="./eye-ciliary.png" alt="" /></button>
+            <button class="structure-piece piece-vitreous" type="button" data-part="vitreous" aria-label="高亮玻璃体"><img src="./eye-vitreous.png" alt="" /></button>
+            <button class="structure-piece piece-retina" type="button" data-part="retina" aria-label="高亮视网膜"><img src="./eye-retina.png" alt="" /></button>
+            <button class="structure-piece piece-nerve" type="button" data-part="nerve" aria-label="高亮视神经"><img src="./eye-nerve.png" alt="" /></button>
           </div>
-        </div>
-        <div id="eye-canvas" class="three-canvas"></div>
-      </section>
-      <aside class="lab-panel">
-        <h2>结构指示</h2>
-        <div id="eye-info" class="eye-info-card"></div>
-        <div class="legend">
-          <span><i style="background:#7de7ff"></i>角膜</span>
-          <span><i style="background:#ffd36b"></i>晶状体</span>
-          <span><i style="background:#89a7ff"></i>玻璃体</span>
-          <span><i style="background:#ff7a91"></i>视网膜</span>
-        </div>
-      </aside>
-    </main>
-    <script type="module" src="./src/main.js"></script>
-    <script type="module" src="./src/pages/eye-detailed.js?v=hover-info-ray-reset"></script>
-  </body>
+          <div class="flow-line" aria-label="结构流程标注线">
+            <button class="is-active" type="button" data-part="cornea">角膜</button>
+            <button type="button" data-part="iris">虹膜</button>
+            <button type="button" data-part="lens">晶状体</button>
+            <button type="button" data-part="ciliary">睫状体</button>
+            <button type="button" data-part="vitreous">玻璃体</button>
+            <button type="button" data-part="retina">视网膜</button>
+            <button type="button" data-part="nerve">视神经</button>
+          </div>
+          <article class="tip" aria-live="polite"><div class="icon-badge">?</div><div><h3 id="partTitle">角膜</h3><p id="partText">光线首先经过角膜。角膜透明且屈光力强，是外界光线进入眼内后的第一道会聚结构。</p></div></article>
+        </section>
+        <aside class="stack">
+          <article class="info-card" data-part-card="ciliary"><div class="icon-badge">M</div><div><h2>睫状体</h2><p>含睫状肌，调节晶状体曲度；分泌房水，维持眼压。</p></div></article>
+          <article class="info-card" data-part-card="vitreous"><div class="icon-badge">V</div><div><h2>玻璃体</h2><p>透明凝胶状组织，充填眼球后部，维持眼球形态。</p></div></article>
+          <article class="info-card" data-part-card="retina"><div class="icon-badge">R</div><div><h2>视网膜/脉络膜/巩膜</h2><p>视网膜感光成像；脉络膜供营养；巩膜保护眼球。</p></div></article>
+          <article class="info-card" data-part-card="nerve"><div class="icon-badge">N</div><div><h2>视神经</h2><p>传导视网膜产生的神经信号至大脑视皮层。</p></div></article>
+        </aside>
+      </div>
+    </section>
+
+    <section class="knowledge-page" data-page="ametropia" aria-label="为什么会近视远视和散光">
+      <div class="cases-layout">
+        <section>
+          <div class="case-grid">
+            <article class="case-card"><h2><span>1</span>正常眼</h2><div class="case-diagram" data-diagram="normal"></div><p>平行光线经过角膜和晶状体屈折后，焦点正好落在视网膜上，形成清晰图像。</p><div class="tags"><span class="tag good">成像清晰</span><span class="tag">视觉舒适</span></div></article>
+            <article class="case-card"><h2><span>2</span>近视眼</h2><div class="case-diagram" data-diagram="myopia"></div><p>眼轴过长或屈光力过强，光线过度聚焦，焦点落在视网膜前，远处物体模糊。</p><div class="tags"><span class="tag">眼轴过长</span><span class="tag">远处模糊</span></div></article>
+            <article class="case-card"><h2><span>3</span>远视眼</h2><div class="case-diagram" data-diagram="hyperopia"></div><p>眼轴过短或屈光力不足，光线聚焦不足，焦点落在视网膜后，近处物体模糊。</p><div class="tags"><span class="tag">眼轴过短</span><span class="tag">近处模糊</span></div></article>
+            <article class="case-card"><h2><span>4</span>散光</h2><div class="case-diagram" data-diagram="astigmatism"></div><p>角膜或晶状体曲率在不同方向不一致，光线在不同子午线上聚焦于不同位置。</p><div class="tags"><span class="tag">曲率不均匀</span><span class="tag">视觉扭曲</span></div></article>
+          </div>
+          <article class="tip"><div class="icon-badge">?</div><div><h3>小知识</h3><p>屈光不正的本质，是外界光线进入眼内后没有准确聚焦在视网膜上，因此产生模糊视觉。</p></div></article>
+        </section>
+        <aside class="check-panel">
+          <h2><span class="icon-badge">⊙</span>核心判断</h2>
+          <article class="check-card"><span class="check-symbol" style="background:var(--green)">✓</span><p>焦点在视网膜上 = 正常眼</p></article>
+          <article class="check-card"><span class="check-symbol">−</span><p>焦点在视网膜前 = 近视</p></article>
+          <article class="check-card"><span class="check-symbol" style="background:#ff7a1a">+</span><p>焦点在视网膜后 = 远视</p></article>
+          <article class="check-card"><span class="check-symbol" style="background:#8d35f2">*</span><p>不同方向不在同一焦点 = 散光</p></article>
+        </aside>
+      </div>
+    </section>
+
+    <section class="knowledge-page" data-page="correction" aria-label="镜片如何矫正屈光不正">
+      <div class="lens-layout">
+        <section>
+          <div class="lens-grid">
+            <article class="lens-card"><h2>凸透镜</h2><p>使平行光线会聚到一点。</p><div class="lens-diagram" data-lens="convex"></div><p><strong style="color:var(--violet)">用途：</strong>适合矫正远视。</p></article>
+            <article class="lens-card"><h2>凹透镜</h2><p>使平行光线发散。</p><div class="lens-diagram" data-lens="concave"></div><p><strong style="color:var(--violet)">用途：</strong>适合矫正近视。</p></article>
+            <article class="lens-card"><h2>柱面镜</h2><p>主要改变某一方向的屈光力。</p><div class="lens-diagram" data-lens="cylinder"></div><p><strong style="color:var(--violet)">用途：</strong>适合矫正散光。</p></article>
+          </div>
+          <div class="variables">
+            <article class="variable-card"><h3>物距 u</h3><p>物体到透镜光学中心的距离。</p></article>
+            <article class="variable-card"><h3>像距 v</h3><p>像到透镜光学中心的距离。</p></article>
+            <article class="variable-card"><h3>焦距 f</h3><p>平行光经透镜会聚或发散的关键距离。</p></article>
+            <article class="variable-card"><h3>放大率 m</h3><p>像的高度与物体高度的比值。</p></article>
+            <div class="formula">1/f = 1/u + 1/v&nbsp;&nbsp;&nbsp;&nbsp; m = -v/u</div>
+          </div>
+          <article class="tip"><div class="icon-badge">i</div><div><h3>小知识</h3><p>在实验中，透镜位置固定时，改变物距会影响像距和放大率；焦距由镜片本身决定，是衡量镜片屈光能力的关键参数。</p></div></article>
+        </section>
+        <aside class="prep-card">
+          <h2>进入实验前你需要知道什么</h2>
+          <ol>
+            <li>认识人眼的主要屈光结构及其成像原理。</li>
+            <li>理解正常眼、近视眼和远视眼的成像差异。</li>
+            <li>知道凸透镜和凹透镜如何用于矫正屈光不正。</li>
+            <li>理解物距、像距、焦距之间的关系及公式应用。</li>
+            <li>能根据成像位置判断是否需要矫正及选择合适镜片。</li>
+          </ol>
+          <a class="cta" href="./experiment.html">进入模拟实验 <span>→</span></a>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const modules = {
+      vision: {
+        index: "01",
+        title: "从光线到视觉",
+        lead: "理解外界光线如何经过人眼并最终形成视觉，是进入屈光实验前的第一步。"
+      },
+      structure: {
+        index: "02",
+        title: "人眼结构与光学特性",
+        lead: "了解人眼的基本结构及各组成部分的光学作用，掌握视觉系统的基本原理。"
+      },
+      exploded: {
+        index: "03",
+        title: "人眼结构分解图",
+        lead: "了解人眼各组成部分的解剖结构及其在视觉形成中的光学作用。"
+      },
+      ametropia: {
+        index: "04",
+        title: "为什么会近视、远视和散光？",
+        lead: "比较正常眼与常见屈光不正的成像差异，理解焦点偏离视网膜的位置变化。"
+      },
+      correction: {
+        index: "05",
+        title: "镜片如何矫正屈光不正？",
+        lead: "认识凸透镜、凹透镜和柱面镜的作用，并理解物距、像距、焦距等实验变量。"
+      }
+    };
+
+    const partCopy = {
+      cornea: ["角膜", "光线首先经过角膜。角膜透明且屈光力强，是外界光线进入眼内后的第一道会聚结构。"],
+      iris: ["虹膜", "虹膜通过改变瞳孔大小调节进光量，帮助眼睛适应不同亮度环境。"],
+      lens: ["晶状体", "晶状体可以改变曲率，使远近不同的物体都尽量清晰成像在视网膜上。"],
+      ciliary: ["睫状体", "睫状体含有睫状肌，调节晶状体曲度，也是人眼调焦能力的重要来源。"],
+      vitreous: ["玻璃体", "玻璃体充填眼球后部，维持眼球形态，并让光线稳定到达视网膜。"],
+      retina: ["视网膜/脉络膜/巩膜", "视网膜负责感光和成像，脉络膜提供营养，巩膜构成坚韧外壳保护眼球。"],
+      nerve: ["视神经", "视神经把视网膜产生的神经信号传递至大脑视觉皮层，是眼球与大脑之间的通路。"]
+    };
+
+    const switchButtons = document.querySelectorAll("[data-module]");
+    const pages = document.querySelectorAll("[data-page]");
+    const eyebrow = document.getElementById("moduleEyebrow");
+    const title = document.getElementById("moduleTitle");
+    const lead = document.getElementById("moduleLead");
+
+    function showModule(module) {
+      const copy = modules[module] || modules.vision;
+      eyebrow.textContent = `基础知识 · ${copy.index}`;
+      title.textContent = copy.title;
+      lead.textContent = copy.lead;
+      switchButtons.forEach((button) => {
+        const active = button.dataset.module === module;
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-selected", String(active));
+      });
+      pages.forEach((page) => page.classList.toggle("is-active", page.dataset.page === module));
+      history.replaceState(null, "", `#${module}`);
+    }
+
+    switchButtons.forEach((button) => {
+      button.addEventListener("click", () => showModule(button.dataset.module));
+    });
+
+    function setPart(part) {
+      const copy = partCopy[part];
+      if (!copy) return;
+      document.getElementById("partTitle").textContent = copy[0];
+      document.getElementById("partText").textContent = copy[1];
+      document.querySelectorAll("[data-part]").forEach((item) => item.classList.toggle("is-active", item.dataset.part === part));
+      document.querySelectorAll("[data-part-card]").forEach((item) => item.classList.toggle("is-active", item.dataset.partCard === part));
+    }
+
+    document.querySelectorAll("[data-part]").forEach((item) => {
+      item.addEventListener("click", () => setPart(item.dataset.part));
+    });
+
+    function eyeDiagram(type) {
+      const focusX = { normal: 256, myopia: 228, hyperopia: 306, astigmatism: 242 }[type] || 256;
+      const extra = type === "astigmatism"
+        ? `<path d="M54 130 C126 110 164 105 238 118" stroke="#19b7ff" stroke-width="3" fill="none" marker-end="url(#arrowBlue)"/><circle cx="264" cy="112" r="5" fill="#ef2f30"/>`
+        : "";
+      return `<svg viewBox="0 0 360 190" role="img" aria-label="眼球成像示意图">
+        <defs>
+          <marker id="arrowYellow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#f4b000"/></marker>
+          <marker id="arrowBlue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#19b7ff"/></marker>
+        </defs>
+        <path d="M175 40 C253 42 302 82 306 95 C302 108 253 148 175 150 C154 126 154 64 175 40Z" fill="#fff" stroke="#cfd4e4" stroke-width="4"/>
+        <path d="M184 54 C244 58 282 86 286 95 C282 104 244 132 184 136 C168 114 168 76 184 54Z" fill="#ff7d18" opacity="0.88"/>
+        <ellipse cx="174" cy="95" rx="13" ry="48" fill="#e7f2ff" stroke="#8cc1ee" stroke-width="3"/>
+        <line x1="278" y1="36" x2="278" y2="154" class="retina-line"/>
+        <path d="M54 58 C112 58 176 70 ${focusX} 95" stroke="#f4b000" stroke-width="3" fill="none" marker-end="url(#arrowYellow)"/>
+        <path d="M54 95 C116 95 174 95 ${focusX} 95" stroke="#f4b000" stroke-width="3" fill="none" marker-end="url(#arrowYellow)"/>
+        <path d="M54 132 C112 132 176 120 ${focusX} 95" stroke="#f4b000" stroke-width="3" fill="none" marker-end="url(#arrowYellow)"/>
+        ${extra}
+        <circle cx="${focusX}" cy="95" r="6" class="focus-dot"/>
+      </svg>`;
+    }
+
+    function lensDiagram(type) {
+      const shape = {
+        convex: `<path d="M176 22 C206 58 206 132 176 168 C146 132 146 58 176 22Z" fill="#ffffffcc" stroke="#9fb2cc" stroke-width="4"/>`,
+        concave: `<path d="M164 22 C145 62 145 128 164 168 L188 168 C207 128 207 62 188 22Z" fill="#ffffffcc" stroke="#9fb2cc" stroke-width="4"/>`,
+        cylinder: `<rect x="156" y="36" width="54" height="118" rx="24" fill="#ffffffcc" stroke="#9fb2cc" stroke-width="4"/>`
+      }[type];
+      const out = {
+        convex: [["50","58","292","95"],["50","95","292","95"],["50","132","292","95"]],
+        concave: [["50","58","302","34"],["50","95","302","95"],["50","132","302","156"]],
+        cylinder: [["50","64","292","86"],["50","95","292","95"],["50","126","292","104"]]
+      }[type];
+      return `<svg viewBox="0 0 360 190" role="img" aria-label="透镜光路示意图">
+        <defs><marker id="arrowLens" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#f4b000"/></marker></defs>
+        <line x1="26" y1="95" x2="332" y2="95" class="axis"/>
+        <path d="M26 58 L150 58" class="ray"/><path d="M26 95 L150 95" class="ray"/><path d="M26 132 L150 132" class="ray"/>
+        ${shape}
+        ${out.map(([x1,y1,x2,y2]) => `<path d="M${x1} ${y1} L150 ${y1} L${x2} ${y2}" class="ray" marker-end="url(#arrowLens)"/>`).join("")}
+        <circle cx="314" cy="95" r="7" class="focus-dot"/>
+      </svg>`;
+    }
+
+    document.querySelectorAll("[data-diagram]").forEach((el) => { el.innerHTML = eyeDiagram(el.dataset.diagram); });
+    document.querySelectorAll("[data-lens]").forEach((el) => { el.innerHTML = lensDiagram(el.dataset.lens); });
+
+    const initial = location.hash.replace("#", "");
+    if (modules[initial]) showModule(initial);
+  </script>
+</body>
 </html>

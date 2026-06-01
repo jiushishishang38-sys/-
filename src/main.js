@@ -1,7 +1,7 @@
 const page = document.body.dataset.page;
 
 document.querySelectorAll('.nav a').forEach((link) => {
-  if (link.href.includes(`${page}.html`) || (page === 'home' && link.href.endsWith('/course.html'))) {
+  if (link.href.includes(`${page}.html`)) {
     link.classList.add('active');
   }
 });

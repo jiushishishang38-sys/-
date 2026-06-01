@@ -9,6 +9,8 @@ const {
   loadRows,
   normalizeLensPower,
   renderDataTable,
+  sampleFocusMeasurement,
+  traceTeachingRays,
   updateRowData
 } = optics;
 
@@ -88,8 +90,44 @@ assert.equal(normalizeLensPower('concave', 2.5), -2.5);
 assert.equal(normalizeLensPower('concave', -2.5), -2.5);
 assert.equal(normalizeLensPower('convex', -3), 3);
 assert.equal(normalizeLensPower('none', 3), 0);
+assert.equal(normalizeLensPower('cylinder', 3), 0);
 
 const concaveResult = evaluateExperiment({ eyeId: 'D', screenCm: 24, lensType: 'concave', lensPower: 2 });
 const convexResult = evaluateExperiment({ eyeId: 'D', screenCm: 24, lensType: 'convex', lensPower: -2 });
 assert.equal(concaveResult.signedLensPower, -2);
 assert.equal(convexResult.signedLensPower, 2);
+const astigUncorrected = evaluateExperiment({ eyeId: 'S', screenCm: 24, lensType: 'none', cylinderAngle: 45 });
+const astigCorrected = evaluateExperiment({ eyeId: 'S', screenCm: 24, lensType: 'cylinder', cylinderAngle: 45 });
+assert.ok(astigCorrected.spotDiameter < astigUncorrected.spotDiameter);
+assert.ok(evaluateExperiment({ eyeId: 'D', screenCm: 24 }).spotDiameter > 0.8);
+assert.ok(evaluateExperiment({ eyeId: 'A', screenCm: 24 }).spotDiameter > evaluateExperiment({ eyeId: 'D', screenCm: 24 }).spotDiameter);
+assert.equal(Number.isFinite(sampleFocusMeasurement({ eyeId: 'D', screenCm: 24 })), true);
+
+const emmetropicRays = traceTeachingRays({
+  eyeId: 'D',
+  screenCm: 24,
+  lensType: 'none',
+  lensPower: 0,
+  cylinderAngle: 0,
+  objectCm: -24,
+  collimatorCm: -14
+}).rays;
+assert.equal(emmetropicRays.length, 7);
+assert.ok(emmetropicRays.some((ray) => ray.length < 6));
+assert.ok(emmetropicRays.filter((ray) => ray.length >= 6).length >= 3);
+for (const ray of emmetropicRays) {
+  for (const point of ray) {
+    point.forEach((value) => assert.equal(Number.isFinite(value), true));
+  }
+}
+
+const myopicRays = traceTeachingRays({
+  eyeId: 'A',
+  screenCm: 24,
+  lensType: 'none',
+  lensPower: 0,
+  cylinderAngle: 0,
+  objectCm: -24,
+  collimatorCm: -14
+}).rays.filter((ray) => ray.length >= 6);
+assert.ok(myopicRays.some((ray) => Math.abs(ray.at(-1)[1]) > 0.05));

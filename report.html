@@ -11,10 +11,10 @@
       <a class="brand" href="./index.html">屈光模拟实验平台</a>
       <nav class="nav">
         <a href="./guide.html">课前引导</a>
-        <a href="./experiment.html">3D 光具座</a>
-        <a href="./eye.html">眼球 3D</a>
-        <a href="./quiz.html">课堂检测</a>
+        <a href="./eye.html">基础知识</a>
+        <a href="./experiment.html">模拟实验</a>
         <a href="./report.html">实验报告</a>
+        <a href="./quiz.html">知识夯实</a>
       </nav>
     </header>
     <main class="report-page">
@@ -25,34 +25,145 @@
           <label>班级 <input data-report-draft="student-class" /></label>
           <label>日期 <input id="report-date" type="date" data-report-draft="report-date" /></label>
         </div>
+
         <h2>一、实验目的</h2>
-        <textarea data-report-draft="purpose">通过模拟眼实验理解眼睛成像的光学原理，掌握近视、远视、散光及其矫正方法。</textarea>
-        <h2>二、实验数据记录</h2>
+        <textarea data-report-draft="purpose">1. 通过模拟眼实验理解眼睛成像的光学原理，认识视网膜位置、焦点位置与成像清晰度之间的关系。
+2. 掌握近视、远视、散光等常见屈光不正的判别依据，并能选择合适的透镜进行矫正。
+3. 学会根据多次测量结果计算平均焦距、焦度和矫正镜片焦度，比较计算值与实配值的差异。
+4. 培养根据实验现象分析误差来源、改进实验操作的能力。</textarea>
+
+        <h2>二、实验原理</h2>
+        <div class="principle-card">
+          <p>人眼可近似看作由角膜、晶状体和视网膜组成的会聚成像系统。来自远处物体的光线进入眼球后，经眼的屈光系统会聚，若焦点恰好落在视网膜上，就形成清晰像；若焦点落在视网膜前后，则成像模糊，表现为屈光不正。</p>
+          <ul class="principle-list">
+            <li><strong>正视眼：</strong>平行光经眼屈光系统后焦点落在视网膜上，像最清晰。</li>
+            <li><strong>近视眼：</strong>眼的屈光能力偏强或眼轴偏长，焦点落在视网膜前，需要用凹透镜使入射光适当发散后再进入眼睛。</li>
+            <li><strong>远视眼：</strong>眼的屈光能力偏弱或眼轴偏短，焦点落在视网膜后，需要用凸透镜预先会聚光线。</li>
+            <li><strong>散光眼：</strong>不同方向的屈光能力不同，不能在同一平面形成统一焦点，通常需用柱面镜按特定轴向矫正。</li>
+          </ul>
+          <div class="ray-diagram-grid" aria-label="屈光不正及矫正简化光路图">
+            <figure class="ray-diagram">
+              <svg viewBox="0 0 320 170" role="img" aria-labelledby="normal-eye-title">
+                <title id="normal-eye-title">正视眼简化光路图</title>
+                <path class="ray-eye" d="M198 38 C260 46 286 82 286 85 C286 88 260 124 198 132 C180 112 180 58 198 38Z" />
+                <ellipse class="ray-lens" cx="197" cy="85" rx="9" ry="48" />
+                <line class="ray-retina" x1="250" y1="48" x2="250" y2="122" />
+                <line class="ray-axis" x1="28" y1="85" x2="292" y2="85" />
+                <path class="ray-line" d="M30 55 L196 55 L250 85" />
+                <path class="ray-line" d="M30 85 L196 85 L250 85" />
+                <path class="ray-line" d="M30 115 L196 115 L250 85" />
+                <circle class="ray-focus" cx="250" cy="85" r="4" />
+                <text x="23" y="29">平行光</text>
+                <text x="226" y="37">视网膜</text>
+                <text x="203" y="154">焦点落在视网膜上</text>
+              </svg>
+              <figcaption>正视：焦点与视网膜重合，成像清晰。</figcaption>
+            </figure>
+            <figure class="ray-diagram">
+              <svg viewBox="0 0 320 170" role="img" aria-labelledby="myopia-eye-title">
+                <title id="myopia-eye-title">近视眼凹透镜矫正简化光路图</title>
+                <path class="ray-correction concave" d="M98 43 C86 66 86 104 98 127 M116 43 C128 66 128 104 116 127" />
+                <path class="ray-eye" d="M198 38 C260 46 286 82 286 85 C286 88 260 124 198 132 C180 112 180 58 198 38Z" />
+                <ellipse class="ray-lens" cx="197" cy="85" rx="9" ry="48" />
+                <line class="ray-retina" x1="250" y1="48" x2="250" y2="122" />
+                <line class="ray-axis" x1="28" y1="85" x2="292" y2="85" />
+                <path class="ray-line muted" d="M30 55 L196 55 L226 85" />
+                <path class="ray-line muted" d="M30 115 L196 115 L226 85" />
+                <path class="ray-line" d="M30 55 L106 55 L196 62 L250 85" />
+                <path class="ray-line" d="M30 85 L106 85 L196 85 L250 85" />
+                <path class="ray-line" d="M30 115 L106 115 L196 108 L250 85" />
+                <circle class="ray-focus muted" cx="226" cy="85" r="3" />
+                <circle class="ray-focus" cx="250" cy="85" r="4" />
+                <text x="74" y="35">凹透镜</text>
+                <text x="210" y="70">原焦点</text>
+                <text x="203" y="154">矫正后后移至视网膜</text>
+              </svg>
+              <figcaption>近视：焦点偏前，用凹透镜使光线发散。</figcaption>
+            </figure>
+            <figure class="ray-diagram">
+              <svg viewBox="0 0 320 170" role="img" aria-labelledby="hyperopia-eye-title">
+                <title id="hyperopia-eye-title">远视眼凸透镜矫正简化光路图</title>
+                <ellipse class="ray-correction convex" cx="107" cy="85" rx="11" ry="44" />
+                <path class="ray-eye" d="M198 38 C260 46 286 82 286 85 C286 88 260 124 198 132 C180 112 180 58 198 38Z" />
+                <ellipse class="ray-lens" cx="197" cy="85" rx="9" ry="48" />
+                <line class="ray-retina" x1="250" y1="48" x2="250" y2="122" />
+                <line class="ray-axis" x1="28" y1="85" x2="292" y2="85" />
+                <path class="ray-line muted" d="M30 55 L196 55 L277 85" />
+                <path class="ray-line muted" d="M30 115 L196 115 L277 85" />
+                <path class="ray-line" d="M30 55 L107 55 L196 62 L250 85" />
+                <path class="ray-line" d="M30 85 L107 85 L196 85 L250 85" />
+                <path class="ray-line" d="M30 115 L107 115 L196 108 L250 85" />
+                <circle class="ray-focus" cx="250" cy="85" r="4" />
+                <circle class="ray-focus muted" cx="277" cy="85" r="3" />
+                <text x="74" y="35">凸透镜</text>
+                <text x="258" y="70">原焦点</text>
+                <text x="197" y="154">矫正后前移至视网膜</text>
+              </svg>
+              <figcaption>远视：焦点偏后，用凸透镜使光线会聚。</figcaption>
+            </figure>
+            <figure class="ray-diagram">
+              <svg viewBox="0 0 320 170" role="img" aria-labelledby="astigmatism-eye-title">
+                <title id="astigmatism-eye-title">散光眼柱面镜矫正简化光路图</title>
+                <path class="ray-cylinder" d="M96 40 C117 54 117 116 96 130 M114 40 C93 54 93 116 114 130" />
+                <path class="ray-eye" d="M198 38 C260 46 286 82 286 85 C286 88 260 124 198 132 C180 112 180 58 198 38Z" />
+                <ellipse class="ray-lens" cx="197" cy="85" rx="9" ry="48" />
+                <line class="ray-retina" x1="250" y1="48" x2="250" y2="122" />
+                <line class="ray-axis" x1="28" y1="85" x2="292" y2="85" />
+                <path class="ray-line muted" d="M30 52 L196 58 L238 78" />
+                <path class="ray-line muted" d="M30 118 L196 112 L263 92" />
+                <path class="ray-line" d="M30 55 L106 57 L196 64 L250 85" />
+                <path class="ray-line" d="M30 85 L106 85 L196 85 L250 85" />
+                <path class="ray-line" d="M30 115 L106 113 L196 106 L250 85" />
+                <circle class="ray-focus" cx="250" cy="85" r="4" />
+                <text x="66" y="35">柱面镜轴向</text>
+                <text x="205" y="154">不同方向焦点被校正</text>
+              </svg>
+              <figcaption>散光：不同方向焦点不一，用柱面镜按轴向矫正。</figcaption>
+            </figure>
+          </div>
+          <p>本实验中用焦点到眼模型的距离表示模拟眼的成像位置，取视网膜位置为 24.00 cm。焦度可由公式 D = 100 / f 计算，其中 f 为焦距，单位为 cm，D 的单位为屈光度。矫正镜片焦度可近似表示为 D<sub>矫正</sub> = D<sub>视网膜</sub> - D<sub>模拟眼</sub>。计算值用于理论判断，实配值则由调节镜片后观察像屏清晰程度得到。</p>
+        </div>
+
+        <h2>三、实验数据记录</h2>
+        <p class="report-hint">在模拟实验中分别记录 A-G 模拟眼的清晰像位置，建议每个模拟眼至少测量三次，并填写矫正镜片的计算值与实配值。</p>
         <div class="table-wrap"><table id="report-table"></table></div>
-        <h2>三、现象观察</h2>
-        <textarea data-report-draft="observation" placeholder="记录像屏清晰位置、焦点前后变化、镜片矫正效果等。"></textarea>
-        <h2>四、结论与反思</h2>
-        <textarea data-report-draft="conclusion" placeholder="说明 A-G 模拟眼的屈光性质，以及矫正镜片焦度计算值与实配值的差异原因。"></textarea>
+
+        <h2>四、现象观察</h2>
+        <textarea data-report-draft="observation" placeholder="记录像屏清晰位置、焦点前后变化、镜片矫正效果等。">1. 未加矫正镜片时，调节像屏位置可以观察到不同模拟眼的清晰位置不同：焦点小于 24.00 cm 的模拟眼像在视网膜前形成，焦点大于 24.00 cm 的模拟眼像在视网膜后形成。
+2. 对近视型模拟眼加入合适凹透镜后，成像位置向后移动，像屏在视网膜位置附近变清晰。
+3. 对远视型模拟眼加入合适凸透镜后，成像位置向前移动，像屏在视网膜位置附近变清晰。
+4. 散光模拟眼在不同方向上清晰程度不同，旋转柱面镜时可观察到像的清晰度随轴向变化。</textarea>
+
+        <h2>五、数据处理与分析</h2>
+        <textarea data-report-draft="analysis" placeholder="结合表格数据，说明平均焦距、焦度和矫正镜片焦度的计算过程。">1. 对每个模拟眼的三次焦距测量值求平均，作为该模拟眼的实验焦距。
+2. 将平均焦距代入 D = 100 / f，得到模拟眼屈光系统的焦度。
+3. 与视网膜位置 24.00 cm 对应的焦度比较：若平均焦距小于 24.00 cm，判断为近视；若平均焦距大于 24.00 cm，判断为远视；若接近 24.00 cm，判断为正视。
+4. 根据 D矫正 = D视网膜 - D模拟眼 估算矫正镜片焦度，并与实际调节得到的实配值比较。两者接近说明模型判断合理；若差异较大，应结合测量误差和操作过程分析原因。</textarea>
+
+        <h2>六、结论与反思</h2>
+        <textarea data-report-draft="conclusion" placeholder="说明 A-G 模拟眼的屈光性质，以及矫正镜片焦度计算值与实配值的差异原因。">通过模拟实验可知，眼睛能否看清物体取决于光线经屈光系统后的焦点是否落在视网膜上。焦点在视网膜前时表现为近视，应使用凹透镜矫正；焦点在视网膜后时表现为远视，应使用凸透镜矫正；不同方向成像位置不一致时表现为散光，需要用柱面镜按合适轴向矫正。
+
+本实验中矫正镜片焦度的计算值与实配值可能存在差异，主要原因包括像屏位置读数误差、清晰度判断带有主观性、镜片步进调节不连续、模拟眼模型对真实眼球结构进行了简化，以及光具座元件未完全共轴等。后续实验可通过增加测量次数、统一清晰判据、细调镜片焦度和校准元件位置来减小误差。</textarea>
+
         <div class="report-section-head">
-          <h2>五、思考题</h2>
-          <span class="editable-badge no-print">可编辑</span>
+          <h2>七、思考题</h2>
         </div>
         <div class="editable-questions">
           <label class="question-item">
             <span>1. 常见眼睛屈光不正有几类？如何矫正？</span>
-            <textarea class="answer-field" data-report-draft="thinking-1" placeholder="在此填写你的分析与结论。"></textarea>
+            <textarea class="answer-field" data-report-draft="thinking-1" placeholder="可从近视、远视、散光的焦点位置和矫正镜片类型作答。"></textarea>
           </label>
           <label class="question-item">
             <span>2. 如果以 D 为正视眼，如何判断 A、B、C、E、F、G 的屈光不正类型？</span>
-            <textarea class="answer-field" data-report-draft="thinking-2" placeholder="可结合焦距平均值与视网膜位置作答。"></textarea>
+            <textarea class="answer-field" data-report-draft="thinking-2" placeholder="可结合焦距平均值与 24.00 cm 的大小关系作答。"></textarea>
           </label>
           <label class="question-item">
             <span>3. 为什么矫正镜片焦度的计算值与实配值可能不同？</span>
-            <textarea class="answer-field" data-report-draft="thinking-3" placeholder="可从测量误差、器材位置和模型简化等角度说明。"></textarea>
+            <textarea class="answer-field" data-report-draft="thinking-3" placeholder="可从测量误差、器材位置、清晰度判断和模型简化等角度说明。"></textarea>
           </label>
           <label class="question-item">
             <span>4. 如何验证光经透镜后近似为平行光？</span>
-            <textarea class="answer-field" data-report-draft="thinking-4" placeholder="写出你的验证方法和判断依据。"></textarea>
+            <textarea class="answer-field" data-report-draft="thinking-4" placeholder="写出验证方法和判断依据，例如改变像屏位置观察光斑大小变化。"></textarea>
           </label>
         </div>
       </section>
@@ -62,6 +173,6 @@
       </div>
     </main>
     <script type="module" src="./src/main.js"></script>
-    <script type="module" src="./src/pages/report.js?v=data-edit-1"></script>
+    <script type="module" src="./src/pages/report.js?v=print-layout-1"></script>
   </body>
 </html>

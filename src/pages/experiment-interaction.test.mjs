@@ -14,7 +14,11 @@ import {
   getRulerTickMarks,
   snapRailCm,
   railXToSnappedCm,
-  selectDragTargetFromHits
+  selectDragTargetFromHits,
+  selectNearestDragTarget,
+  DRAG_PICK_AREA_WIDTH,
+  DRAG_PICK_AREA_HEIGHT,
+  DRAG_PICK_AREA_DEPTH
 } from './experiment-interaction.js';
 
 assert.equal(BENCH_RISER_Y, 0.28);
@@ -26,6 +30,9 @@ assert.equal(MOUNT_BASE_HEIGHT, 0.24);
 assert.equal(MOUNT_BASE_DEPTH, 0.42);
 assert.equal(MOUNT_POST_HEIGHT, 1.1);
 assert.equal(MOUNT_POST_Z, -0.18);
+assert.equal(DRAG_PICK_AREA_WIDTH, 1.55);
+assert.equal(DRAG_PICK_AREA_HEIGHT, 3.1);
+assert.equal(DRAG_PICK_AREA_DEPTH, 2.15);
 assert.equal(cmToX(24), 6);
 assert.equal(formatRailPosition(24), '24.00 cm');
 assert.equal(formatRailPosition(-14.25), '-14.25 cm');
@@ -62,3 +69,11 @@ const targetFromRailProjection = selectDragTargetFromHits([
   }
 ], -4.1);
 assert.equal(targetFromRailProjection, intendedTarget);
+
+const fallbackTarget = selectNearestDragTarget([
+  { position: { x: -5 }, userData: { dragInput: true } },
+  { position: { x: 0.4 }, userData: { dragInput: true } },
+  { position: { x: 3.5 }, userData: { dragInput: true } }
+], 0.1);
+assert.equal(fallbackTarget.position.x, 0.4);
+assert.equal(selectNearestDragTarget([{ position: { x: 5 }, userData: { dragInput: true } }], 0), null);

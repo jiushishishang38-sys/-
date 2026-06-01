@@ -5,12 +5,12 @@ export const MOUNT_BASE_DEPTH = 0.42;
 export const MOUNT_BASE_HEIGHT = 0.24;
 export const MOUNT_POST_HEIGHT = 1.1;
 export const MOUNT_POST_Z = -0.18;
-export const DRAG_PICK_AREA_WIDTH = 0.95;
-export const DRAG_PICK_AREA_HEIGHT = 2.65;
-export const DRAG_PICK_AREA_DEPTH = 1.45;
+export const DRAG_PICK_AREA_WIDTH = 1.55;
+export const DRAG_PICK_AREA_HEIGHT = 3.1;
+export const DRAG_PICK_AREA_DEPTH = 2.15;
 export const DRAG_PICK_AREA_Y = 1.32;
 export const DRAG_PICK_AREA_Z = -0.05;
-export const DRAG_PICK_RAIL_TOLERANCE = 0.85;
+export const DRAG_PICK_RAIL_TOLERANCE = 1.45;
 export const RULER_MIN_CM = -36;
 export const RULER_MAX_CM = 36;
 export const RULER_TICK_START_Y = 34;
@@ -98,4 +98,19 @@ export function selectDragTargetFromHits(hits, railX, options = {}) {
   });
 
   return pool[0].target;
+}
+
+export function selectNearestDragTarget(targets, railX, options = {}) {
+  if (!Number.isFinite(railX)) return null;
+  const railTolerance = options.railTolerance ?? DRAG_PICK_RAIL_TOLERANCE;
+  let nearestTarget = null;
+  let nearestDelta = Number.POSITIVE_INFINITY;
+  for (const target of targets ?? []) {
+    if (!target?.userData?.dragInput) continue;
+    const railDelta = Math.abs((target.position?.x ?? Number.POSITIVE_INFINITY) - railX);
+    if (railDelta > railTolerance || railDelta >= nearestDelta) continue;
+    nearestTarget = target;
+    nearestDelta = railDelta;
+  }
+  return nearestTarget;
 }
