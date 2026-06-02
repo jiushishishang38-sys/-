@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 const headerPages = ['guide.html', 'experiment.html', 'eye.html', 'quiz.html', 'report.html'];
 const coverHtml = readFileSync(resolve('index.html'), 'utf8');
 const coverNav = coverHtml.match(/<nav class="cover-nav"[\s\S]*?<\/nav>/)?.[0] ?? '';
+const coverCta = coverHtml.match(/<a class="cover-cta"[\s\S]*?<\/a>/)?.[0] ?? '';
 const coverLinks = [
   ['guide.html', '课前引导'],
   ['eye.html', '基础知识'],
@@ -18,6 +19,7 @@ coverLinks.forEach(([href, label]) => {
 });
 assert.doesNotMatch(coverNav, /href="\.\/course\.html"/);
 assert.doesNotMatch(coverNav, />PROJECT<|>FEATURES<|>SIMULATION<|>REPORT</);
+assert.match(coverCta, /href="\.\/guide\.html"/);
 
 headerPages.forEach((page) => {
   const html = readFileSync(resolve(page), 'utf8');
