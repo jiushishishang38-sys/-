@@ -16,6 +16,7 @@ import {
   UserRound,
   Zap,
 } from 'lucide-react';
+import eyeSectionImage from '../../eye.png';
 
 gsap.registerPlugin(useGSAP);
 
@@ -175,7 +176,7 @@ function GuideApp() {
             <span className="guide-ray ray-upper" />
             <span className="guide-ray ray-lower" />
           </div>
-          <img className="eye-image" src="./eye.png" alt="人眼剖面结构" />
+          <img className="eye-image" src={eyeSectionImage} alt="人眼剖面结构" />
           <div className="dot-grid" aria-hidden="true" />
           {labels.map((label, index) => (
             <div className={`eye-label eye-label-${index + 1}`} style={{ top: label.top, left: label.left }} key={label.title}>
