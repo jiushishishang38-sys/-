@@ -16,7 +16,7 @@ import {
   UserRound,
   Zap,
 } from 'lucide-react';
-import eyeSectionImage from '../../eye.png';
+import eyeSectionImage from '../../photo/eye.png';
 
 gsap.registerPlugin(useGSAP);
 
