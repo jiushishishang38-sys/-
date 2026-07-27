@@ -1,5 +1,5 @@
 param(
-  [string]$Root = (Join-Path $PSScriptRoot "..\dist"),
+  [string]$Root = (Join-Path $PSScriptRoot "..\..\dist"),
   [int]$Port = 4173
 )
 

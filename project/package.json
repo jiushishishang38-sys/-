@@ -7,7 +7,6 @@
     "dev": "vite --host 127.0.0.1 --port 4173",
     "preview:local": "vite preview --host 127.0.0.1 --port 4173",
     "dev:vite": "vite --host 127.0.0.1",
-    "test": "node scripts/run-tests.mjs",
     "build": "vite build"
   },
   "dependencies": {

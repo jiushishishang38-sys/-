@@ -11,8 +11,10 @@ build/
 
 # Local preview and generated verification artifacts
 screenshots/
+local-data/
 .tools/
 .edge-profile/
+.edge-headless-profile/
 blender-*-windows-x64/
 blender-*-windows-x64.zip
 blender-*-windows-x64.msi
@@ -31,3 +33,12 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Local-only development, test, capture, and document-generation tools
+project/scripts/blender/
+project/scripts/capture/
+project/scripts/report/
+project/scripts/test/
+project/scripts/dev/dev-server.mjs
+project/scripts/dev/model-thumbnail.html
+project/src/**/*.test.mjs
