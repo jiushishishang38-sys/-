@@ -54,6 +54,7 @@ function GuideApp() {
 
   useGSAP((context, contextSafe) => {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const compactViewport = window.matchMedia('(max-width: 640px)').matches;
 
     if (reduceMotion) {
       gsap.set('.guide-motion, .guide-title > *, .guide-card, .goal-card, .lower-panel, .eye-label, .process-node, .guide-ray', {
@@ -71,8 +72,19 @@ function GuideApp() {
     timeline
       .from('.guide-title > *', { y: 28, duration: 0.58, stagger: 0.08 })
       .from('.guide-card', { y: 26, scale: 0.96, duration: 0.46, stagger: 0.07 }, '-=0.24')
-      .from('.eye-stage', { x: 34, scale: 0.97, duration: 0.68 }, '-=0.5')
-      .from('.eye-label', { x: 24, scale: 0.96, duration: 0.38, stagger: 0.08 }, '-=0.22')
+      .from('.eye-stage', {
+        x: compactViewport ? 0 : 34,
+        y: compactViewport ? 22 : 0,
+        scale: 0.97,
+        duration: 0.68,
+      }, '-=0.5')
+      .from('.eye-label', {
+        x: compactViewport ? 0 : 24,
+        y: compactViewport ? 14 : 0,
+        scale: 0.96,
+        duration: 0.38,
+        stagger: 0.08,
+      }, '-=0.22')
       .from('.goal-card', { y: 18, scale: 0.98, duration: 0.38, stagger: 0.06 }, '-=0.14')
       .from('.lower-panel', { y: 22, duration: 0.48, stagger: 0.08 }, '-=0.08')
       .from('.guide-tip', { y: 12, duration: 0.36 }, '-=0.18');

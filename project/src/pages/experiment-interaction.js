@@ -24,7 +24,7 @@ export function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-export function snapRailCm(value, min, max, step = 0.25) {
+export function snapRailCm(value, min, max, step = 0.05) {
   const snapped = Math.round(value / step) * step;
   return clamp(Number(snapped.toFixed(2)), min, max);
 }

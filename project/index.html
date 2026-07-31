@@ -3,19 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-    <title>OPTICAL SIMULATION · 光学透镜实验模拟平台</title>
+    <title>OPTICAL SIMULATION · 模拟眼屈光不正及其矫正虚拟仿真实验平台</title>
     <link rel="stylesheet" href="./src/styles/app.css" />
+    <link rel="stylesheet" href="./src/styles/site-header.css" />
   </head>
-  <body data-page="cover">
-    <main class="cover-page">
-      <nav class="cover-nav" aria-label="封面导航">
+  <body class="shared-navigation" data-page="cover">
+    <header class="site-header">
+      <a class="brand" href="./index.html">虚拟仿真实验平台</a>
+      <nav class="nav">
         <a href="./guide.html">课前引导</a>
         <a href="./eye.html">基础知识</a>
         <a href="./experiment.html">模拟实验</a>
         <a href="./report.html">实验报告</a>
         <a href="./quiz.html">知识夯实</a>
       </nav>
-
+    </header>
+    <main class="cover-page">
       <div class="cover-stats" aria-label="平台统计">
         <div class="cover-stat"><strong><span>+</span>2</strong><small>透镜类型</small></div>
         <div class="cover-stat"><strong><span>+</span>6</strong><small>核心功能</small></div>
@@ -23,18 +26,23 @@
       </div>
 
       <section class="cover-visual" aria-label="透明玻璃光学透镜与折射光路">
-        <video class="cover-video-media" autoplay muted loop playsinline preload="metadata" aria-label="透明玻璃透镜折射光路动态封面">
-          <source src="./media/封面视频.mp4" type="video/mp4" />
-        </video>
+        <canvas
+          class="cover-optics-canvas"
+          id="cover-optics-canvas"
+          role="img"
+          aria-label="透明玻璃凸透镜组与紫蓝色折射光线动态图形"
+        >透明玻璃凸透镜组与折射光路示意图</canvas>
       </section>
 
       <section class="cover-content">
         <h1 class="cover-title">OPTICAL<br />SIMULATION</h1>
-        <p class="cover-kicker">光学透镜实验模拟平台</p>
+        <p class="cover-kicker">模拟眼屈光不正及其矫正虚拟仿真实验平台</p>
         <p class="cover-subtitle">支持凸透镜 / 凹透镜、参数调节、自动计算、结果可视化与实验报告输出</p>
       </section>
 
       <a class="cover-cta" href="./guide.html">START EXPERIMENT <span aria-hidden="true">↗</span></a>
     </main>
+    <script type="module" src="./src/main.js"></script>
+    <script type="module" src="./src/pages/cover-canvas.js"></script>
   </body>
 </html>

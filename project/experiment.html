@@ -5,10 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>模拟正式实验</title>
     <link rel="stylesheet" href="./src/styles/app.css" />
+    <link rel="stylesheet" href="./src/styles/site-header.css" />
+    <link rel="stylesheet" href="./src/styles/collimation.css" />
+    <link rel="stylesheet" href="./src/styles/eye-model-box.css?v=inline-flow-2" />
+    <link rel="stylesheet" href="./src/styles/experiment-notebook.css?v=notebook-flow-21" />
+    <link rel="stylesheet" href="./src/styles/experiment-controls.css" />
   </head>
-  <body data-page="experiment">
+  <body class="shared-navigation" data-page="experiment">
     <header class="site-header">
-      <a class="brand" href="./index.html">屈光模拟实验平台</a>
+      <a class="brand" href="./index.html">虚拟仿真实验平台</a>
       <nav class="nav">
         <a href="./guide.html">课前引导</a>
         <a href="./eye.html">基础知识</a>
@@ -17,6 +22,199 @@
         <a href="./quiz.html">知识夯实</a>
       </nav>
     </header>
+    <section class="collimation-module" id="collimation-module" aria-labelledby="collimation-title">
+      <div class="collimation-shell">
+        <header class="collimation-heading">
+          <div>
+            <p class="collimation-kicker"><span>实验步骤 01</span> 光源准直</p>
+            <h1 id="collimation-title">准直光源调节模块</h1>
+            <p>拖动点光源或准直凸透镜，使光源准确位于透镜焦点处，获得后续实验所需的平行光。</p>
+          </div>
+          <div class="collimation-result-badge is-pending" id="collimation-result-badge" aria-live="polite">
+            <span aria-hidden="true">×</span>
+            <strong>未准直</strong>
+          </div>
+        </header>
+
+        <div class="collimation-dashboard">
+          <section class="collimation-simulator" aria-label="准直光路模拟区域">
+            <div class="collimation-readouts" aria-live="polite">
+              <article>
+                <span>光源距离 u</span>
+                <p><strong id="collimation-distance">7.00</strong><em>cm</em></p>
+              </article>
+              <article>
+                <span>透镜焦距 f</span>
+                <p><strong id="collimation-focal-readout">10.00</strong><em>cm</em></p>
+              </article>
+              <article class="collimation-state-readout">
+                <span>光线状态</span>
+                <p><strong id="collimation-ray-state">发散</strong></p>
+              </article>
+            </div>
+
+            <div class="collimation-stage">
+              <svg id="collimation-svg" viewBox="0 0 900 420" role="img" aria-labelledby="collimation-svg-title collimation-svg-desc">
+                <title id="collimation-svg-title">点光源与准直凸透镜光路模拟</title>
+                <desc id="collimation-svg-desc">可沿光轴拖动点光源和准直凸透镜，光线会根据物距与焦距关系实时更新。</desc>
+                <defs>
+                  <pattern id="collimation-grid" width="35" height="35" patternUnits="userSpaceOnUse">
+                    <path d="M 35 0 L 0 0 0 35" fill="none" stroke="rgba(92, 79, 170, 0.08)" stroke-width="1"/>
+                  </pattern>
+                  <linearGradient id="collimation-bench-gradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0" stop-color="#dce5f1"/>
+                    <stop offset="0.5" stop-color="#ffffff"/>
+                    <stop offset="1" stop-color="#cfdbea"/>
+                  </linearGradient>
+                  <linearGradient id="collimation-lens-gradient" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#ffffff" stop-opacity="0.92"/>
+                    <stop offset="0.48" stop-color="#bcecff" stop-opacity="0.72"/>
+                    <stop offset="1" stop-color="#7a5cff" stop-opacity="0.36"/>
+                  </linearGradient>
+                  <radialGradient id="collimation-source-glow">
+                    <stop offset="0" stop-color="#fff4ad" stop-opacity="0.95"/>
+                    <stop offset="0.42" stop-color="#ffc953" stop-opacity="0.58"/>
+                    <stop offset="1" stop-color="#ffb329" stop-opacity="0"/>
+                  </radialGradient>
+                  <marker id="collimation-arrow-warm" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 Z" fill="#d8832b"/>
+                  </marker>
+                  <marker id="collimation-arrow-parallel" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 Z" fill="#138e80"/>
+                  </marker>
+                  <filter id="collimation-soft-shadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#3d3677" flood-opacity="0.18"/>
+                  </filter>
+                </defs>
+
+                <rect x="16" y="16" width="868" height="388" rx="24" fill="#f8f9fc"/>
+                <rect x="16" y="16" width="868" height="388" rx="24" fill="url(#collimation-grid)"/>
+                <line class="collimation-axis" x1="64" y1="210" x2="850" y2="210"/>
+                <rect class="collimation-bench" x="62" y="292" width="790" height="20" rx="10" fill="url(#collimation-bench-gradient)"/>
+                <line class="collimation-bench-line" x1="76" y1="302" x2="838" y2="302"/>
+
+                <g id="collimation-rays" aria-hidden="true"></g>
+                <g id="collimation-focus-marker" class="collimation-focus-marker" aria-hidden="true">
+                  <line x1="0" y1="154" x2="0" y2="266"/>
+                  <circle cx="0" cy="210" r="5"/>
+                  <text x="0" y="286" text-anchor="middle">F</text>
+                </g>
+                <g id="collimation-convergence-marker" class="collimation-convergence-marker" aria-hidden="true">
+                  <path d="M -8 -8 L 8 8 M 8 -8 L -8 8"/>
+                  <text x="0" y="-16" text-anchor="middle">会聚点</text>
+                </g>
+
+                <g
+                  id="collimation-source"
+                  class="collimation-draggable collimation-source"
+                  role="slider"
+                  tabindex="0"
+                  aria-label="点光源位置"
+                  aria-valuemin="0"
+                  aria-valuemax="30"
+                  aria-valuenow="7"
+                  data-collimation-drag="source"
+                >
+                  <circle cx="0" cy="210" r="54" fill="url(#collimation-source-glow)"/>
+                  <path d="M -42 188 H -12 V 232 H -42 Z" fill="#3a4862" rx="8"/>
+                  <rect x="-31" y="181" width="15" height="58" rx="7" fill="#64748b"/>
+                  <circle cx="0" cy="210" r="13" fill="#ffd260" stroke="#ffffff" stroke-width="5"/>
+                  <circle class="collimation-drag-halo" cx="0" cy="210" r="29"/>
+                  <line x1="0" y1="242" x2="0" y2="292" stroke="#52627a" stroke-width="7" stroke-linecap="round"/>
+                  <rect x="-27" y="286" width="54" height="14" rx="7" fill="#607089"/>
+                  <text x="0" y="344" text-anchor="middle">点光源</text>
+                </g>
+
+                <g
+                  id="collimation-lens"
+                  class="collimation-draggable collimation-lens"
+                  role="slider"
+                  tabindex="0"
+                  aria-label="准直凸透镜位置"
+                  aria-valuemin="0"
+                  aria-valuemax="40"
+                  aria-valuenow="0"
+                  data-collimation-drag="lens"
+                >
+                  <path d="M 0 116 C -28 139 -28 281 0 304 C 28 281 28 139 0 116 Z" fill="url(#collimation-lens-gradient)" stroke="#5c48df" stroke-width="4"/>
+                  <path d="M 0 126 V 294" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.72"/>
+                  <circle class="collimation-drag-halo" cx="0" cy="210" r="43"/>
+                  <line x1="0" y1="304" x2="0" y2="292" stroke="#52627a" stroke-width="7" stroke-linecap="round"/>
+                  <rect x="-31" y="286" width="62" height="14" rx="7" fill="#607089"/>
+                  <text x="0" y="344" text-anchor="middle">准直凸透镜</text>
+                </g>
+              </svg>
+              <p class="collimation-drag-tip"><span aria-hidden="true">↔</span> 沿光轴拖动器材；方向键每次微调 0.05 cm，Shift + 方向键每次 0.5 cm</p>
+            </div>
+
+            <div class="collimation-feedback is-diverging" id="collimation-feedback" role="status" aria-live="polite">
+              <span class="collimation-feedback-icon" aria-hidden="true">×</span>
+              <div>
+                <strong id="collimation-feedback-title">光源位于焦点以内，无法获得平行光</strong>
+                <p id="collimation-feedback-detail">继续增大光源与准直透镜之间的距离。</p>
+              </div>
+            </div>
+
+            <div class="collimation-checklist" aria-label="实验完成条件">
+              <span data-collimation-check="distance"><i aria-hidden="true">1</i> u 与 f 相等</span>
+              <span data-collimation-check="rays"><i aria-hidden="true">2</i> 光线变为平行</span>
+              <span data-collimation-check="status"><i aria-hidden="true">3</i> 状态为准直成功</span>
+            </div>
+          </section>
+
+          <aside class="collimation-panel" aria-label="准直实验提示与控制">
+            <div class="collimation-principle">
+              <span class="collimation-panel-index">01</span>
+              <div>
+                <h2>实验原理</h2>
+                <p>当点光源位于凸透镜焦点处时，根据凸透镜成像规律，光线经过透镜后变为平行光。</p>
+              </div>
+            </div>
+
+            <div class="collimation-principle">
+              <span class="collimation-panel-index">02</span>
+              <div>
+                <h2>调节方法</h2>
+                <p>移动光源，使其与准直透镜焦距相等。也可以拖动准直透镜观察光路变化。</p>
+              </div>
+            </div>
+
+            <div class="collimation-focal-control">
+              <div>
+                <label for="collimation-focal-number">准直透镜焦距 f</label>
+                <span><input id="collimation-focal-number" type="number" min="5" max="20" step="0.01" value="10.00" inputmode="decimal" title="可输入至 0.01 cm，按 Enter 确认"/><em>cm</em></span>
+              </div>
+              <input id="collimation-focal-range" type="range" min="5" max="20" step="0.01" value="10" aria-label="准直透镜焦距"/>
+            </div>
+
+            <div class="collimation-actions" aria-label="光路控制">
+              <button class="collimation-button is-primary" id="collimation-show-rays" type="button">显示光路</button>
+              <button class="collimation-button" id="collimation-hide-rays" type="button">隐藏光路</button>
+              <button class="collimation-button is-accent" id="collimation-auto" type="button">自动调节至焦点</button>
+              <button class="collimation-button" id="collimation-reset" type="button">重新开始</button>
+            </div>
+
+            <button class="collimation-next" id="collimation-next" type="button" disabled>
+              进入下一实验步骤
+              <span aria-hidden="true">→</span>
+            </button>
+          </aside>
+        </div>
+      </div>
+
+      <div class="collimation-success" id="collimation-success" role="dialog" aria-modal="true" aria-labelledby="collimation-success-title" hidden>
+        <div class="collimation-success-card">
+          <span class="collimation-success-mark" aria-hidden="true">✓</span>
+          <p>准直光源调节完成</p>
+          <h2 id="collimation-success-title">已获得平行光源</h2>
+          <p>调节完成：已获得平行光源，可以进行后续自准直实验。</p>
+          <div>
+            <button class="collimation-button" id="collimation-success-close" type="button">继续观察</button>
+            <button class="collimation-button is-primary" id="collimation-success-next" type="button">进入下一步</button>
+          </div>
+        </div>
+      </div>
+    </section>
     <main class="lab-layout">
       <section class="lab-stage">
         <div class="stage-head">
@@ -30,14 +228,13 @@
         </div>
         <div class="equipment-canvas-layout">
           <div id="experiment-canvas" class="three-canvas">
+            <p class="canvas-a11y-description" id="experiment-canvas-description">
+              可拖动点光源、双凸透镜和视网膜像屏，观察光线在同一光轴上的准直、会聚与成像变化。
+            </p>
             <div class="equipment-overlay" aria-label="器材总览">
               <div class="equipment-item">
                 <span class="equipment-thumb source-thumb" aria-hidden="true"><i></i></span>
-                <span class="equipment-name">光源</span>
-              </div>
-              <div class="equipment-item">
-                <span class="equipment-thumb object-thumb" aria-hidden="true"><i></i></span>
-                <span class="equipment-name">物屏</span>
+                <span class="equipment-name">可移动点光源</span>
               </div>
               <div class="equipment-item">
                 <span class="equipment-thumb lens-thumb" aria-hidden="true"><i></i></span>
@@ -49,18 +246,62 @@
               </div>
               <div class="equipment-item">
                 <span class="equipment-thumb screen-thumb" aria-hidden="true"><i></i></span>
-                <span class="equipment-name">像屏</span>
+                <span class="equipment-name">视网膜像屏</span>
               </div>
               <div class="equipment-item">
                 <span class="equipment-thumb detector-thumb" aria-hidden="true"><i></i></span>
                 <span class="equipment-name">探测器</span>
               </div>
             </div>
-            <div class="detector-card" aria-label="光斑显示">
-              <div class="detector-card-head">
+            <div class="eye-model-dropzone" id="eye-model-dropzone" aria-hidden="true">
+              <span class="eye-model-dropzone-eye" aria-hidden="true"><i></i></span>
+              <strong>模拟眼安装位</strong>
+              <small>拖动模型到此处安装</small>
+            </div>
+            <div class="eye-model-install-toast" id="eye-model-install-toast" role="status" aria-live="polite" hidden></div>
+            <div class="detector-card is-collapsed" id="detector-card" aria-label="光斑显示">
+              <div
+                class="detector-card-head"
+                id="detector-card-handle"
+                role="button"
+                tabindex="0"
+                aria-label="拖动光斑显示窗口"
+                title="拖动以移动光斑显示窗口"
+              >
                 <span>光斑显示</span>
+                <span class="detector-card-tools">
+                  <span class="detector-drag-hint" aria-hidden="true">⠿ 拖动</span>
+                  <button
+                    class="detector-card-toggle"
+                    id="detector-card-toggle"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="detector-card-body"
+                    aria-label="展开光斑显示"
+                    title="展开光斑显示"
+                  >⌄</button>
+                </span>
               </div>
-              <canvas id="detector-spot-canvas" width="260" height="160"></canvas>
+              <div class="detector-card-body" id="detector-card-body">
+                <canvas
+                  id="detector-spot-canvas"
+                  width="260"
+                  height="160"
+                  role="img"
+                  aria-label="实时光斑形状与清晰度显示"
+                  aria-describedby="detector-spot-description"
+                >实时光斑形状与清晰度显示</canvas>
+                <p class="canvas-a11y-description" id="detector-spot-description">
+                  网格中心的光斑会随视网膜位置、模拟眼类型和矫正镜片实时变化。
+                </p>
+              </div>
+              <button
+                class="detector-resize-handle"
+                id="detector-resize-handle"
+                type="button"
+                aria-label="调整光斑显示大小"
+                title="拖动或使用左右方向键缩放"
+              ></button>
             </div>
           </div>
         </div>
@@ -68,59 +309,150 @@
       </section>
 
       <aside class="lab-panel">
-        <h2>实验控制</h2>
         <input id="mode" type="hidden" value="measure" />
-        <label>模拟眼
-          <select id="eye-id">
+        <select id="eye-id" hidden aria-hidden="true">
             <option>A</option><option>B</option><option>C</option><option selected>D</option>
             <option>E</option><option>F</option><option>G</option><option>S</option>
-          </select>
-        </label>
-        <label>
-          <span class="range-label-row"><span>像屏位置</span><span class="position-input-wrap"><input id="screen-pos-value" class="position-number" type="number" min="14" max="36" step="0.25" value="24" aria-label="像屏位置数值" /><em>cm</em></span></span>
-          <input id="screen-pos" type="range" min="14" max="36" step="0.25" value="24" />
-        </label>
-        <label>
-          <span class="range-label-row"><span>双凸透镜位置</span><span class="position-input-wrap"><input id="collimator-pos-value" class="position-number" type="number" min="-24" max="-6" step="0.25" value="-14" aria-label="双凸透镜位置数值" /><em>cm</em></span></span>
-          <input id="collimator-pos" type="range" min="-24" max="-6" step="0.25" value="-14" />
-        </label>
-        <label>
-          <span class="range-label-row"><span>物屏位置</span><span class="position-input-wrap"><input id="object-pos-value" class="position-number" type="number" min="-34" max="-12" step="0.25" value="-24" aria-label="物屏位置数值" /><em>cm</em></span></span>
-          <input id="object-pos" type="range" min="-34" max="-12" step="0.25" value="-24" />
-        </label>
-        <label>矫正镜片
-          <select id="lens-type">
-            <option value="none">不加入</option>
-            <option value="concave">凹透镜</option>
-            <option value="convex">凸透镜</option>
-            <option value="cylinder">柱面镜</option>
-          </select>
-        </label>
-        <label data-lens-control="power">
-          <span class="range-label-row"><span>镜片焦度 D</span><span class="position-input-wrap"><input id="lens-power-value" class="position-number" type="number" min="0" max="8" step="0.25" value="0.00" aria-label="镜片焦度数值" /><em>D</em></span></span>
-          <input id="lens-power" type="range" min="0" max="8" step="0.25" value="0" />
-        </label>
-        <label data-lens-control="cylinder">
-          <span class="range-label-row"><span>柱面镜角度</span><span class="position-input-wrap"><input id="cylinder-angle-value" class="position-number" type="number" min="0" max="180" step="1" value="20" aria-label="柱面镜角度数值" /><em>°</em></span></span>
-          <input id="cylinder-angle" type="range" min="0" max="180" step="1" value="20" />
-        </label>
-        <div class="readout" id="readout"></div>
-        <button class="button primary" id="record-measurement">记录本次焦距</button>
-        <button class="button" id="auto-correct">自动选择矫正镜片</button>
-        <button class="button" id="save-report">保存到实验报告</button>
+        </select>
+        <div class="eye-model-box-staging" hidden>
+          <button
+            class="eye-model-box-trigger"
+            id="eye-model-box-trigger"
+            type="button"
+            aria-expanded="false"
+            aria-controls="eye-model-box-drawer"
+          >
+            <span class="eye-model-box-thumb" aria-hidden="true"><i></i></span>
+            <span class="eye-model-box-trigger-copy">
+              <strong>打开模拟眼模型盒</strong>
+              <small>从 A–G、S 模型中查看并取出实验对象</small>
+            </span>
+            <span class="eye-model-box-trigger-state" aria-hidden="true">＋</span>
+          </button>
+          <section
+            class="eye-model-box-drawer"
+            id="eye-model-box-drawer"
+            aria-labelledby="eye-model-box-title"
+            hidden
+          >
+            <header class="eye-model-box-head">
+              <div>
+                <span class="eye-model-box-index">器材 · 模拟眼库</span>
+                <h2 id="eye-model-box-title">模拟眼模型盒</h2>
+              </div>
+              <button class="eye-model-box-close" id="eye-model-box-close" type="button" aria-label="关闭模拟眼模型盒">×</button>
+            </header>
+            <div class="eye-model-box-body" id="eye-model-box-content"></div>
+          </section>
+        </div>
+
+        <details
+          class="essential-controls experiment-control-details experiment-control-step"
+          data-operation-control="screen"
+          aria-labelledby="essential-controls-title"
+        >
+          <summary>
+            <span>
+              <i aria-hidden="true">02</i>
+              <span class="experiment-control-step-copy">
+                <strong id="essential-controls-title">像屏调节</strong>
+                <small>移动视网膜像屏，寻找最清晰成像位置</small>
+              </span>
+            </span>
+          </summary>
+          <div class="essential-controls-body">
+            <label class="essential-control">
+              <span class="range-label-row"><span>视网膜 / 像屏位置</span><span class="position-input-wrap"><input id="screen-pos-value" class="position-number" type="number" min="14" max="36" step="0.05" value="24.00" title="可输入至 0.05 cm，按 Enter 确认" aria-label="视网膜或像屏位置数值" /><em>cm</em></span></span>
+              <input id="screen-pos" type="range" min="14" max="36" step="0.05" value="24" />
+            </label>
+            <label class="essential-control" data-correction-control="type">矫正镜片
+              <select id="lens-type">
+                <option value="none">不加入</option>
+                <option value="concave">凹透镜</option>
+                <option value="convex">凸透镜</option>
+                <option value="cylinder">柱面镜</option>
+              </select>
+            </label>
+            <label class="essential-control" data-correction-control="power" data-lens-control="power">
+              <span class="range-label-row"><span>镜片焦度</span><span class="position-input-wrap"><input id="lens-power-value" class="position-number" type="number" min="0" max="4" step="0.05" value="0.00" title="可输入至 0.05 D，按 Enter 确认" aria-label="镜片焦度数值" /><em>D</em></span></span>
+              <input id="lens-power" type="range" min="0" max="4" step="0.05" value="0" />
+            </label>
+            <label class="essential-control" data-correction-control="cylinder" data-lens-control="cylinder">
+              <span class="range-label-row"><span>柱面镜轴向</span><span class="position-input-wrap"><input id="cylinder-angle-value" class="position-number" type="number" min="0" max="180" step="1" value="20" title="可输入整数角度，按 Enter 确认" aria-label="柱面镜角度数值" /><em>°</em></span></span>
+              <input id="cylinder-angle" type="range" min="0" max="180" step="1" value="20" />
+            </label>
+          </div>
+        </details>
+
+        <details class="experiment-control-details experiment-control-step" data-operation-control="collimation">
+          <summary>
+            <span>
+              <i aria-hidden="true">01</i>
+              <span class="experiment-control-step-copy">
+                <strong>自准直调节</strong>
+                <small>移动光源和双凸透镜，使 u = f</small>
+              </span>
+            </span>
+          </summary>
+          <div>
+            <label>
+              <span class="range-label-row"><span>点光源位置</span><span class="position-input-wrap"><input id="object-pos-value" class="position-number" type="number" min="-34" max="-7" step="0.05" value="-24.00" title="可输入至 0.05 cm，按 Enter 确认" aria-label="点光源位置数值" /><em>cm</em></span></span>
+              <input id="object-pos" type="range" min="-34" max="-7" step="0.05" value="-24" />
+            </label>
+            <label>
+              <span class="range-label-row"><span>双凸透镜位置</span><span class="position-input-wrap"><input id="collimator-pos-value" class="position-number" type="number" min="-24" max="-6" step="0.05" value="-14.00" title="可输入至 0.05 cm，按 Enter 确认" aria-label="双凸透镜位置数值" /><em>cm</em></span></span>
+              <input id="collimator-pos" type="range" min="-24" max="-6" step="0.05" value="-14" />
+            </label>
+            <div class="bench-collimation-status is-parallel" id="bench-collimation-status" role="status" aria-live="polite">
+              <span class="bench-collimation-mark" aria-hidden="true">✓</span>
+              <div>
+                <strong id="bench-collimation-label">准直成功</strong>
+                <p><span>u = <b id="bench-collimation-distance">10.00</b> cm</span><span>f = <b id="bench-collimation-focal">10.00</b> cm</span></p>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="experiment-control-details calculation-details" data-result-control>
+          <summary>
+            <span><i aria-hidden="true">03</i><strong>实时计算结果</strong></span>
+            <small>需要核对时展开</small>
+          </summary>
+          <div class="readout" id="readout"></div>
+        </details>
+
+        <div class="essential-control-actions">
+          <button class="button primary" id="record-measurement">记录当前测量结果</button>
+          <button class="button legacy-control-hidden" id="auto-correct" type="button" hidden aria-hidden="true">自动选择矫正镜片</button>
+          <button class="button legacy-control-hidden" id="save-report" type="button" hidden aria-hidden="true">保存到实验报告</button>
+        </div>
+
+        <section
+          class="experiment-notebook"
+          id="experiment-notebook-root"
+          aria-label="实验过程记录本"
+        ></section>
       </aside>
     </main>
     <section class="data-section">
       <div class="section-head">
         <h2>表 3-15-1 模拟眼屈光不正及其矫正</h2>
-        <a class="button" href="./report.html">查看实验报告</a>
+        <div class="data-section-actions">
+          <a class="button" href="./report.html">查看实验报告</a>
+          <button class="button danger" id="clear-experiment-data" type="button">清除表格内容</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table id="experiment-table"></table>
       </div>
+      <p class="data-section-status" id="experiment-table-status" role="status" aria-live="polite"></p>
     </section>
+    <div class="experiment-report-modal" id="experiment-report-modal" hidden></div>
     <script type="module" src="./src/main.js"></script>
-    <script type="module" src="./src/pages/experiment.js?v=data-edit-1"></script>
-    <script type="module" src="./src/pages/free-bench-bootstrap.js"></script>
+    <script type="module" src="./src/pages/collimation.js?v=2"></script>
+    <script type="module" src="./src/pages/eye-model-box.js?v=8"></script>
+    <script type="module" src="./src/pages/experiment.js?v=workflow-order-16"></script>
+    <script type="module" src="./src/pages/experiment-notebook.js?v=notebook-flow-24"></script>
+    <script type="module" src="./src/pages/free-bench-bootstrap.js?v=scroll-stable-1"></script>
   </body>
 </html>

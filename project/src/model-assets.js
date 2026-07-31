@@ -4,7 +4,6 @@ export const OPTICS_MODELS = Object.freeze({
   bench: new URL('./assets/models/optics/bench.glb', import.meta.url).href,
   sourceParallel: new URL('./assets/models/optics/source-parallel.glb', import.meta.url).href,
   sourcePoint: new URL('./assets/models/optics/source-point.glb', import.meta.url).href,
-  objectScreen: new URL('./assets/models/optics/object-screen.glb', import.meta.url).href,
   imageScreen: new URL('./assets/models/optics/image-screen.glb', import.meta.url).href,
   convexLens: new URL('./assets/models/optics/lens-convex.glb', import.meta.url).href,
   concaveLens: new URL('./assets/models/optics/lens-concave.glb', import.meta.url).href,

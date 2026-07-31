@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>屈光模拟实验平台 - 基础知识</title>
+  <title>虚拟仿真实验平台 - 基础知识</title>
   <style>
     :root {
       --ink: #10121c;
@@ -863,13 +863,11 @@
       .tip { grid-template-columns: 1fr; }
     }
   </style>
+  <link rel="stylesheet" href="./src/styles/site-header.css" />
 </head>
-<body>
-  <header class="topbar">
-    <a class="brand" href="./index.html" aria-label="返回首页">
-      <span class="logo" aria-hidden="true"></span>
-      <span>屈光模拟实验平台</span>
-    </a>
+<body class="shared-navigation" data-page="eye">
+  <header class="site-header">
+    <a class="brand" href="./index.html" aria-label="返回首页">虚拟仿真实验平台</a>
     <nav class="nav" aria-label="主导航">
       <a href="./guide.html">课前引导</a>
       <a class="active" href="./eye.html">基础知识</a>
@@ -1061,6 +1059,7 @@
     </section>
   </main>
 
+  <script type="module" src="./src/main.js"></script>
   <script>
     const modules = {
       vision: {
@@ -1137,29 +1136,39 @@
       item.addEventListener("click", () => setPart(item.dataset.part));
     });
 
+    let diagramMarkerIndex = 0;
+
+    function nextDiagramMarkerId(prefix) {
+      diagramMarkerIndex += 1;
+      return `${prefix}-${diagramMarkerIndex}`;
+    }
+
     function eyeDiagram(type) {
       const focusX = { normal: 256, myopia: 228, hyperopia: 306, astigmatism: 242 }[type] || 256;
+      const yellowMarkerId = nextDiagramMarkerId("eye-arrow-yellow");
+      const blueMarkerId = nextDiagramMarkerId("eye-arrow-blue");
       const extra = type === "astigmatism"
-        ? `<path d="M54 130 C126 110 164 105 238 118" stroke="#19b7ff" stroke-width="3" fill="none" marker-end="url(#arrowBlue)"/><circle cx="264" cy="112" r="5" fill="#ef2f30"/>`
+        ? `<path d="M54 130 C126 110 164 105 238 118" stroke="#19b7ff" stroke-width="3" fill="none" marker-end="url(#${blueMarkerId})"/><circle cx="264" cy="112" r="5" fill="#ef2f30"/>`
         : "";
       return `<svg viewBox="0 0 360 190" role="img" aria-label="眼球成像示意图">
         <defs>
-          <marker id="arrowYellow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#f4b000"/></marker>
-          <marker id="arrowBlue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#19b7ff"/></marker>
+          <marker id="${yellowMarkerId}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#f4b000"/></marker>
+          <marker id="${blueMarkerId}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#19b7ff"/></marker>
         </defs>
         <path d="M175 40 C253 42 302 82 306 95 C302 108 253 148 175 150 C154 126 154 64 175 40Z" fill="#fff" stroke="#cfd4e4" stroke-width="4"/>
         <path d="M184 54 C244 58 282 86 286 95 C282 104 244 132 184 136 C168 114 168 76 184 54Z" fill="#ff7d18" opacity="0.88"/>
         <ellipse cx="174" cy="95" rx="13" ry="48" fill="#e7f2ff" stroke="#8cc1ee" stroke-width="3"/>
         <line x1="278" y1="36" x2="278" y2="154" class="retina-line"/>
-        <path d="M54 58 C112 58 176 70 ${focusX} 95" stroke="#f4b000" stroke-width="3" fill="none" marker-end="url(#arrowYellow)"/>
-        <path d="M54 95 C116 95 174 95 ${focusX} 95" stroke="#f4b000" stroke-width="3" fill="none" marker-end="url(#arrowYellow)"/>
-        <path d="M54 132 C112 132 176 120 ${focusX} 95" stroke="#f4b000" stroke-width="3" fill="none" marker-end="url(#arrowYellow)"/>
+        <path d="M54 58 C112 58 176 70 ${focusX} 95" stroke="#f4b000" stroke-width="3" fill="none" marker-end="url(#${yellowMarkerId})"/>
+        <path d="M54 95 C116 95 174 95 ${focusX} 95" stroke="#f4b000" stroke-width="3" fill="none" marker-end="url(#${yellowMarkerId})"/>
+        <path d="M54 132 C112 132 176 120 ${focusX} 95" stroke="#f4b000" stroke-width="3" fill="none" marker-end="url(#${yellowMarkerId})"/>
         ${extra}
         <circle cx="${focusX}" cy="95" r="6" class="focus-dot"/>
       </svg>`;
     }
 
     function lensDiagram(type) {
+      const lensMarkerId = nextDiagramMarkerId("lens-arrow");
       const shape = {
         convex: `<path d="M176 22 C206 58 206 132 176 168 C146 132 146 58 176 22Z" fill="#ffffffcc" stroke="#9fb2cc" stroke-width="4"/>`,
         concave: `<path d="M164 22 C145 62 145 128 164 168 L188 168 C207 128 207 62 188 22Z" fill="#ffffffcc" stroke="#9fb2cc" stroke-width="4"/>`,
@@ -1171,11 +1180,11 @@
         cylinder: [["50","64","292","86"],["50","95","292","95"],["50","126","292","104"]]
       }[type];
       return `<svg viewBox="0 0 360 190" role="img" aria-label="透镜光路示意图">
-        <defs><marker id="arrowLens" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#f4b000"/></marker></defs>
+        <defs><marker id="${lensMarkerId}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#f4b000"/></marker></defs>
         <line x1="26" y1="95" x2="332" y2="95" class="axis"/>
         <path d="M26 58 L150 58" class="ray"/><path d="M26 95 L150 95" class="ray"/><path d="M26 132 L150 132" class="ray"/>
         ${shape}
-        ${out.map(([x1,y1,x2,y2]) => `<path d="M${x1} ${y1} L150 ${y1} L${x2} ${y2}" class="ray" marker-end="url(#arrowLens)"/>`).join("")}
+        ${out.map(([x1,y1,x2,y2]) => `<path d="M${x1} ${y1} L150 ${y1} L${x2} ${y2}" class="ray" marker-end="url(#${lensMarkerId})"/>`).join("")}
         <circle cx="314" cy="95" r="7" class="focus-dot"/>
       </svg>`;
     }

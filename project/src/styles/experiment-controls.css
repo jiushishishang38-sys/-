@@ -1,0 +1,332 @@
+.essential-control-title {
+  margin-bottom: 0 !important;
+}
+
+.essential-control-intro {
+  margin: -2px 0 3px;
+  color: #7c8497;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.essential-controls {
+  overflow: hidden;
+  border: 1px solid rgba(91, 67, 226, 0.16);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(76, 201, 210, 0.11), transparent 35%),
+    linear-gradient(145deg, #ffffff, #f7f6ff);
+  box-shadow: 0 10px 24px rgba(58, 47, 125, 0.08);
+}
+
+.essential-controls-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 11px 8px;
+  border-bottom: 1px solid rgba(94, 83, 151, 0.11);
+}
+
+.essential-controls-head > span {
+  display: grid;
+  width: 29px;
+  height: 29px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 9px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #5740db, #3f91a6);
+  font: 900 9px/1 "Bahnschrift", sans-serif;
+  box-shadow: 0 6px 13px rgba(78, 58, 188, 0.18);
+}
+
+.essential-controls-head h3,
+.essential-controls-head p {
+  margin: 0;
+}
+
+.essential-controls-head h3 {
+  color: #2d3549;
+  font-size: 12px;
+}
+
+.essential-controls-head p {
+  margin-top: 2px;
+  color: #8b93a3;
+  font-size: 8px;
+}
+
+.lab-panel .essential-control {
+  gap: 6px;
+  margin: 0;
+  padding: 9px 11px;
+  border-bottom: 1px solid rgba(95, 104, 128, 0.09);
+  color: #626c80;
+  font-size: 11px;
+  transition:
+    opacity 150ms ease,
+    background 150ms ease;
+}
+
+.lab-panel .essential-control:last-child {
+  border-bottom: 0;
+}
+
+.lab-panel .essential-control:focus-within {
+  background: rgba(239, 237, 255, 0.52);
+}
+
+.lab-panel .essential-control[data-lens-control].is-disabled {
+  display: none;
+}
+
+.lab-panel .essential-control select {
+  min-height: 36px;
+  border-color: rgba(91, 67, 226, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 11px;
+}
+
+.lab-panel .essential-control input[type="range"] {
+  height: 4px;
+  margin: 2px 0 1px;
+}
+
+.experiment-control-details {
+  overflow: hidden;
+  border: 1px solid rgba(92, 102, 126, 0.14);
+  border-radius: 11px;
+  background: rgba(250, 251, 253, 0.88);
+}
+
+.record-operation-controls .experiment-control-step {
+  border-color: rgba(91, 67, 226, 0.16);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(76, 201, 210, 0.11), transparent 35%),
+    linear-gradient(145deg, #ffffff, #f7f6ff);
+  box-shadow: 0 10px 24px rgba(58, 47, 125, 0.08);
+}
+
+.record-operation-controls details.experiment-control-step summary {
+  min-height: 55px;
+  padding: 10px 11px 8px;
+}
+
+.record-operation-controls details.experiment-control-step summary > span {
+  gap: 9px;
+}
+
+.record-operation-controls details.experiment-control-step summary i {
+  width: 29px;
+  height: 29px;
+  border-radius: 9px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #5740db, #3f91a6);
+  box-shadow: 0 6px 13px rgba(78, 58, 188, 0.18);
+  font-size: 9px;
+}
+
+.experiment-control-step-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.record-operation-controls .experiment-control-step-copy strong {
+  color: #2d3549;
+  font-size: 12px;
+}
+
+.record-operation-controls .experiment-control-step-copy small {
+  color: #8b93a3;
+  font-size: 8px;
+  line-height: 1.35;
+}
+
+.record-operation-controls details.experiment-control-step[open] summary {
+  background:
+    radial-gradient(circle at 100% 0, rgba(76, 201, 210, 0.09), transparent 42%),
+    rgba(250, 249, 255, 0.9);
+}
+
+.experiment-control-details summary {
+  display: flex;
+  min-height: 47px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  color: #515b70;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.experiment-control-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.experiment-control-details summary > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.experiment-control-details summary i {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border-radius: 7px;
+  color: #6c5bd3;
+  background: #eeebff;
+  font: normal 900 8px/1 "Bahnschrift", sans-serif;
+}
+
+.experiment-control-details summary strong {
+  font-size: 10px;
+}
+
+.experiment-control-details summary small {
+  color: #9aa1ae;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.experiment-control-details summary::after {
+  content: "+";
+  flex: 0 0 auto;
+  color: #7263cb;
+  font: 500 18px/1 system-ui, sans-serif;
+}
+
+.experiment-control-details[open] summary::after {
+  content: "−";
+}
+
+.experiment-control-details[open] summary {
+  border-bottom: 1px solid rgba(94, 103, 127, 0.1);
+  background: #f7f6ff;
+}
+
+.experiment-control-details > div:not(.readout) {
+  padding: 9px 10px 11px;
+}
+
+.experiment-control-details > .essential-controls-body {
+  padding: 0;
+}
+
+.experiment-control-details > div > label + label {
+  margin-top: 10px;
+}
+
+.bench-collimation-status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 11px;
+  padding: 9px 10px;
+  border: 1px solid rgba(197, 111, 38, 0.2);
+  border-radius: 9px;
+  color: #9a5b20;
+  background: rgba(255, 249, 239, 0.92);
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.bench-collimation-mark {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #c17a33;
+  font: 900 14px/1 "Bahnschrift", sans-serif;
+}
+
+.bench-collimation-status strong,
+.bench-collimation-status p {
+  margin: 0;
+}
+
+.bench-collimation-status strong {
+  display: block;
+  font-size: 10px;
+}
+
+.bench-collimation-status p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 10px;
+  margin-top: 2px;
+  color: #7e8798;
+  font: 700 9px/1.4 "Bahnschrift", "Microsoft YaHei", sans-serif;
+}
+
+.bench-collimation-status b {
+  color: inherit;
+  font-weight: 900;
+}
+
+.bench-collimation-status.is-parallel {
+  color: #087263;
+  border-color: rgba(17, 136, 118, 0.2);
+  background: rgba(239, 252, 248, 0.95);
+}
+
+.bench-collimation-status.is-parallel .bench-collimation-mark {
+  background: #118876;
+}
+
+.bench-collimation-status.is-converging {
+  color: #3859a7;
+  border-color: rgba(63, 92, 176, 0.2);
+  background: rgba(242, 246, 255, 0.94);
+}
+
+.bench-collimation-status.is-converging .bench-collimation-mark {
+  background: #4868bc;
+}
+
+.experiment-control-details .readout {
+  margin: 8px;
+}
+
+.calculation-details summary {
+  min-height: 42px;
+}
+
+.essential-control-actions {
+  display: grid;
+}
+
+.essential-control-actions .button {
+  min-height: 38px;
+  border-radius: 9px;
+  font-size: 10px;
+}
+
+.legacy-control-hidden {
+  display: none !important;
+}
+
+@media (max-width: 980px) {
+  .essential-controls {
+    max-width: 680px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .essential-control,
+  .experiment-control-details,
+  .bench-collimation-status {
+    transition: none;
+  }
+}

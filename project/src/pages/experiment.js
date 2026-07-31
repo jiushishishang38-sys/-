@@ -26,18 +26,19 @@ import {
   snapRailCm
 } from './experiment-interaction.js';
 import {
+  clearAllRowData,
   clearRowData,
+  classifyFocusClarity,
   EYES,
   evaluateExperiment,
   loadRows,
   normalizeLensPower,
   renderDataTable,
-  sampleFocusMeasurement,
   saveRows,
   traceTeachingRays,
   updateRowData,
   updateRowWithMeasurement
-} from '../optics.js';
+} from '../optics.js?v=teaching-lens-3';
 import { attachOpticsModel, setOpticsModel } from '../model-assets.js';
 
 const mount = document.getElementById('experiment-canvas');
@@ -49,6 +50,10 @@ const objectInput = document.getElementById('object-pos');
 const screenValue = document.getElementById('screen-pos-value');
 const collimatorValue = document.getElementById('collimator-pos-value');
 const objectValue = document.getElementById('object-pos-value');
+const benchCollimationStatus = document.getElementById('bench-collimation-status');
+const benchCollimationLabel = document.getElementById('bench-collimation-label');
+const benchCollimationDistance = document.getElementById('bench-collimation-distance');
+const benchCollimationFocal = document.getElementById('bench-collimation-focal');
 const lensTypeInput = document.getElementById('lens-type');
 const lensPowerInput = document.getElementById('lens-power');
 const cylinderInput = document.getElementById('cylinder-angle');
@@ -58,11 +63,19 @@ const lensPowerControl = document.querySelector('[data-lens-control="power"]');
 const cylinderControl = document.querySelector('[data-lens-control="cylinder"]');
 const readout = document.getElementById('readout');
 const table = document.getElementById('experiment-table');
+const clearExperimentDataButton = document.getElementById('clear-experiment-data');
+const experimentTableStatus = document.getElementById('experiment-table-status');
+const detectorCard = document.getElementById('detector-card');
+const detectorCardHandle = document.getElementById('detector-card-handle');
+const detectorCardToggle = document.getElementById('detector-card-toggle');
+const detectorResizeHandle = document.getElementById('detector-resize-handle');
 const detectorSpotCanvas = document.getElementById('detector-spot-canvas');
 const detectorSpotCtx = detectorSpotCanvas?.getContext('2d');
+const labLayout = document.querySelector('.lab-layout');
 
 let rows = loadRows();
 let editingRowId = '';
+let lastDetectorFrame = null;
 
 function renderExperimentTable() {
   renderDataTable(table, rows, { editable: true, editingId: editingRowId });
@@ -71,21 +84,42 @@ function renderExperimentTable() {
 renderExperimentTable();
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xf8f9ff);
+scene.background = new THREE.Color(0xf4f5f6);
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-camera.position.set(8, 5.2, 9);
+camera.position.set(7.6, 3.7, 14.8);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.domElement.setAttribute('role', 'img');
+renderer.domElement.setAttribute('aria-label', '模拟眼屈光不正及矫正三维光具座');
+renderer.domElement.setAttribute('aria-describedby', 'experiment-canvas-description');
 mount.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.target.set(0, 0.95, 0);
+controls.target.set(0, 1.45, 0);
+let userAdjustedCamera = false;
+
+function applyDefaultCameraView() {
+  const compact = camera.aspect < 1.18;
+  if (compact) {
+    camera.position.set(5.2, 3.8, 17.1);
+    controls.target.set(0, 1.5, 0);
+  } else {
+    camera.position.set(7.6, 3.7, 14.8);
+    controls.target.set(0, 1.45, 0);
+  }
+  camera.lookAt(controls.target);
+  controls.update();
+}
+
+controls.addEventListener('start', () => {
+  userAdjustedCamera = true;
+});
 
 scene.add(new THREE.AmbientLight(0xf7fbff, 1.65));
 const key = new THREE.DirectionalLight(0xffffff, 2.2);
@@ -364,7 +398,15 @@ function drawDetectorSpot(spot, result) {
   const cx = width / 2;
   const cy = height / 2;
   const maxPixelRadius = Math.min(width, height) * 0.42;
-  const radius = Math.max(8 * ratio, Math.min(maxPixelRadius, spot.spotRadius * 18 * ratio));
+  const focusClarity = classifyFocusClarity(result?.screenError);
+  const isBestFocus = focusClarity === 'clear'
+    && (!result?.eye?.astigmatic || result?.isCorrected);
+  const focusedScale = isBestFocus ? 0.58 : 1;
+  const minimumRadius = (isBestFocus ? 4.4 : 8) * ratio;
+  const radius = Math.max(
+    minimumRadius,
+    Math.min(maxPixelRadius, spot.spotRadius * 18 * ratio * focusedScale)
+  );
   const rx = radius * Math.max(1, spot.ellipticity ?? 1);
   const ry = radius / Math.max(1, (spot.ellipticity ?? 1) * 0.72);
   const gradient = ctx.createRadialGradient(cx, cy, 1, cx, cy, Math.max(rx, ry));
@@ -380,7 +422,11 @@ function drawDetectorSpot(spot, result) {
   ctx.beginPath();
   ctx.ellipse(0, 0, Math.min(rx, maxPixelRadius), Math.min(ry, maxPixelRadius), 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = spot.spotDiameter < 1.2 ? '#157a62' : spot.spotDiameter < 3.2 ? '#b57008' : '#c23d74';
+  ctx.strokeStyle = focusClarity === 'clear'
+    ? '#157a62'
+    : focusClarity === 'improve'
+      ? '#b57008'
+      : '#c23d74';
   ctx.lineWidth = 2 * ratio;
   ctx.stroke();
   ctx.restore();
@@ -432,10 +478,12 @@ function boardTexture() {
 function addLabBackdrop() {
   const wall = new THREE.Mesh(
     new THREE.PlaneGeometry(19, 9),
-    makeMat(0xeef3ff, { roughness: 0.78 })
+    new THREE.MeshBasicMaterial({
+      color: 0xf0f1f3,
+      side: THREE.DoubleSide
+    })
   );
   wall.position.set(0, 3.15, -3.15);
-  wall.receiveShadow = true;
   scene.add(wall);
 
   const floor = new THREE.Mesh(
@@ -797,18 +845,13 @@ function buildScene() {
   const glass = new THREE.Mesh(new THREE.CircleGeometry(0.22, 28), makeMat(0xffd47a, { transparent: true, opacity: 0.9, emissive: 0xffc04a, emissiveIntensity: 0.35 }));
   glass.position.set(0.41, 0, 0);
   lamp.add(glass);
-  makeMount('source', '光源', -7.0, makeModelBackedGroup('sourceParallel', lamp), { draggable: false });
-
-  const object = new THREE.Group();
-  const plate = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.45, 0.92), makeMat(0xf8fbfd, { transparent: true, opacity: 0.72 }));
-  const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.48, 3), makeMat(0x2b5369));
-  arrow.position.y = 0.24;
-  arrow.rotation.z = Math.PI;
-  object.add(plate, arrow);
-  makeMount('object', '物屏', cmToX(Number(objectInput.value)), makeModelBackedGroup('objectScreen', object), {
+  lamp.position.x = -0.41;
+  const pointSource = new THREE.Group();
+  pointSource.add(lamp);
+  makeMount('source', '点光源', cmToX(Number(objectInput.value)), pointSource, {
     input: objectInput,
     min: -34,
-    max: -12
+    max: -7
   });
 
   makeMount('collimator', '双凸透镜', cmToX(Number(collimatorInput.value)), makeLens(true), {
@@ -842,9 +885,10 @@ function updateRays(resultBundle) {
     line.geometry.dispose();
   });
   rayLines = [];
-  resultBundle.rays.forEach((ray, index) => {
+  const rayMaterial = resultBundle.collimation?.isCollimated ? correctedMat : rayMat;
+  resultBundle.rays.forEach((ray) => {
     const points = ray.map(([x, y, z]) => new THREE.Vector3(x, y + 1.65 + BENCH_RISER_Y, z));
-    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), index === 1 ? correctedMat : rayMat);
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), rayMaterial);
     line.renderOrder = 100;
     rayLines.push(line);
     scene.add(line);
@@ -864,6 +908,22 @@ function readExperimentState() {
   };
 }
 
+function normalizeCollimationPositions(state) {
+  const collimatorMin = Number(collimatorInput.min);
+  const collimatorMax = Number(collimatorInput.max);
+  const sourceMin = Number(objectInput.min);
+  const sourceMax = Number(objectInput.max);
+  state.collimatorCm = snapRailCm(state.collimatorCm, collimatorMin, collimatorMax);
+  state.objectCm = snapRailCm(
+    state.objectCm,
+    sourceMin,
+    Math.min(sourceMax, state.collimatorCm - 1)
+  );
+  collimatorInput.value = String(state.collimatorCm);
+  objectInput.value = String(state.objectCm);
+  return state;
+}
+
 function experimentKey(state) {
   return [
     state.mode,
@@ -878,43 +938,72 @@ function experimentKey(state) {
 }
 
 function setComponentPositions(state) {
-  componentMap.get('object').position.x = cmToX(state.objectCm);
+  componentMap.get('source').position.x = cmToX(state.objectCm);
   componentMap.get('collimator').position.x = cmToX(state.collimatorCm);
   componentMap.get('screen').position.x = cmToX(state.screenCm);
 }
 
 function updatePositionReadouts(state) {
-  objectValue.value = state.objectCm.toFixed(2);
-  collimatorValue.value = state.collimatorCm.toFixed(2);
-  screenValue.value = state.screenCm.toFixed(2);
+  if (document.activeElement !== objectValue) objectValue.value = state.objectCm.toFixed(2);
+  if (document.activeElement !== collimatorValue) collimatorValue.value = state.collimatorCm.toFixed(2);
+  if (document.activeElement !== screenValue) screenValue.value = state.screenCm.toFixed(2);
+}
+
+function updateBenchCollimationStatus(collimation) {
+  if (!benchCollimationStatus || !collimation) return;
+  const copy = {
+    diverging: '光线发散（u < f）',
+    parallel: '准直成功（u = f）',
+    converging: '光线会聚（u > f）'
+  };
+  benchCollimationStatus.className = `bench-collimation-status is-${collimation.rayState}`;
+  benchCollimationStatus.dataset.state = collimation.rayState;
+  benchCollimationStatus.querySelector('.bench-collimation-mark').textContent = collimation.isCollimated ? '✓' : '×';
+  benchCollimationLabel.textContent = copy[collimation.rayState];
+  benchCollimationDistance.textContent = collimation.distanceCm.toFixed(2);
+  benchCollimationFocal.textContent = collimation.focalLengthCm.toFixed(2);
+  mount.dataset.collimationState = collimation.rayState;
 }
 
 function syncPositionNumberToRange(numberInput, rangeInput) {
   const value = Number(numberInput.value);
-  if (!Number.isFinite(value)) return;
+  if (!Number.isFinite(value) || numberInput.value.trim() === '') {
+    numberInput.value = Number(rangeInput.value).toFixed(2);
+    return;
+  }
   const min = Number(rangeInput.min);
   const max = Number(rangeInput.max);
-  const snapped = snapRailCm(value, min, max);
+  const step = Number(rangeInput.step) || 0.05;
+  const snapped = snapRailCm(value, min, max, step);
   numberInput.value = snapped.toFixed(2);
   rangeInput.value = String(snapped);
-  updateExperiment(true);
+  rangeInput.dispatchEvent(new Event('input', { bubbles: true }));
+  rangeInput.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 function syncLensNumberToRange(numberInput, rangeInput, digits = 0) {
   const value = Number(numberInput.value);
-  if (!Number.isFinite(value)) return;
+  if (!Number.isFinite(value) || numberInput.value.trim() === '') {
+    numberInput.value = Number(rangeInput.value).toFixed(digits);
+    return;
+  }
   const min = Number(rangeInput.min);
   const max = Number(rangeInput.max);
   const step = Number(rangeInput.step) || 1;
   const snapped = clamp(Math.round(value / step) * step, min, max);
   numberInput.value = snapped.toFixed(digits);
   rangeInput.value = String(snapped);
-  updateExperiment(true);
+  rangeInput.dispatchEvent(new Event('input', { bubbles: true }));
+  rangeInput.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 function updateLensValueReadouts() {
-  if (lensPowerValue) lensPowerValue.value = Number(lensPowerInput.value).toFixed(2);
-  if (cylinderValue) cylinderValue.value = String(Math.round(Number(cylinderInput.value)));
+  if (lensPowerValue && document.activeElement !== lensPowerValue) {
+    lensPowerValue.value = Number(lensPowerInput.value).toFixed(2);
+  }
+  if (cylinderValue && document.activeElement !== cylinderValue) {
+    cylinderValue.value = String(Math.round(Number(cylinderInput.value)));
+  }
 }
 
 function applyRecommendedCorrection() {
@@ -939,7 +1028,7 @@ function updateLensControls() {
 }
 
 function updateExperiment(force = false) {
-  const state = readExperimentState();
+  const state = normalizeCollimationPositions(readExperimentState());
   const key = experimentKey(state);
   if (!force && key === lastExperimentKey) return;
   lastExperimentKey = key;
@@ -959,17 +1048,22 @@ function updateExperiment(force = false) {
     collimatorCm: state.collimatorCm
   });
   updateRays(bundle);
+  updateBenchCollimationStatus(bundle.collimation);
   const result = bundle.result;
+  lastDetectorFrame = { spot: bundle.spot, result };
   drawDetectorSpot(bundle.spot, result);
   const focus = result.focusCm.toFixed(2);
   const correction = result.correction.toFixed(2);
   const retina = result.isCorrected ? '焦点接近视网膜' : result.retinaError < 0 ? '焦点在视网膜前' : '焦点在视网膜后';
+  const cylinderReadout = state.eyeId === 'S' && state.lensType === 'cylinder'
+    ? `<span>柱面镜角度：<strong>${cylinderInput.value}°</strong></span>`
+    : '';
   readout.innerHTML = `
     <span>当前模拟眼：<strong>${eyeInput.value}</strong>，${result.type}，${result.eye.note}</span>
     <span>当前焦点位置：<strong>${focus} cm</strong></span>
     <span>视网膜判断：<strong>${retina}</strong></span>
     <span>推荐矫正：<strong>${result.recommended.label}</strong>，计算焦度 ${correction} D</span>
-    <span>柱面镜角度：<strong>${cylinderInput.value}°</strong></span>
+    ${cylinderReadout}
   `;
 }
 
@@ -982,11 +1076,17 @@ function updateExperiment(force = false) {
   [collimatorValue, collimatorInput],
   [objectValue, objectInput]
 ].forEach(([numberInput, rangeInput]) => {
+  numberInput.addEventListener('focus', () => {
+    window.requestAnimationFrame(() => numberInput.select());
+  });
   numberInput.addEventListener('change', () => syncPositionNumberToRange(numberInput, rangeInput));
   numberInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
-      syncPositionNumberToRange(numberInput, rangeInput);
+      numberInput.blur();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      numberInput.value = Number(rangeInput.value).toFixed(2);
       numberInput.blur();
     }
   });
@@ -996,11 +1096,17 @@ function updateExperiment(force = false) {
   [lensPowerValue, lensPowerInput, 2],
   [cylinderValue, cylinderInput, 0]
 ].forEach(([numberInput, rangeInput, digits]) => {
+  numberInput.addEventListener('focus', () => {
+    window.requestAnimationFrame(() => numberInput.select());
+  });
   numberInput.addEventListener('change', () => syncLensNumberToRange(numberInput, rangeInput, digits));
   numberInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
-      syncLensNumberToRange(numberInput, rangeInput, digits);
+      numberInput.blur();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      numberInput.value = Number(rangeInput.value).toFixed(digits);
       numberInput.blur();
     }
   });
@@ -1016,14 +1122,27 @@ document.getElementById('auto-correct').addEventListener('click', () => {
   updateExperiment(true);
 });
 
-document.getElementById('record-measurement').addEventListener('click', () => {
-  if (eyeInput.value === 'S') return;
-  const state = readExperimentState();
-  const measuredFocus = sampleFocusMeasurement(state);
+document.addEventListener('experiment-retina-measurement-recorded', (event) => {
+  const eyeId = event.detail?.eyeId;
+  const measuredFocus = Number(event.detail?.position);
+  if (eyeId === 'S' || !EYES[eyeId] || !Number.isFinite(measuredFocus)) return;
   const fittedPower = lensTypeInput.value === 'none'
     ? Number.NaN
     : normalizeLensPower(lensTypeInput.value, lensPowerInput.value);
-  rows = updateRowWithMeasurement(rows, eyeInput.value, measuredFocus, fittedPower);
+  rows = updateRowWithMeasurement(rows, eyeId, measuredFocus, fittedPower);
+  editingRowId = '';
+  renderExperimentTable();
+});
+
+document.addEventListener('experiment-lens-trial-recorded', (event) => {
+  const eyeId = event.detail?.eyeId;
+  const row = rows.find((item) => item.id === eyeId);
+  if (!row) return;
+  const lensPower = Number(event.detail?.lensPower);
+  rows = updateRowData(rows, eyeId, {
+    measurements: row.measurements,
+    correctionFit: Number.isFinite(lensPower) ? lensPower : Number.NaN
+  });
   editingRowId = '';
   renderExperimentTable();
 });
@@ -1063,6 +1182,15 @@ table.addEventListener('click', (event) => {
   }
 });
 
+clearExperimentDataButton.addEventListener('click', () => {
+  const confirmed = window.confirm('确定清除表格中 A–G 的全部实验数据吗？此操作不可撤销。');
+  if (!confirmed) return;
+  rows = clearAllRowData(rows);
+  editingRowId = '';
+  renderExperimentTable();
+  experimentTableStatus.textContent = '已清除 A–G 的全部实验数据。';
+});
+
 document.getElementById('save-report').addEventListener('click', () => {
   saveRows(rows);
   readout.insertAdjacentHTML('beforeend', '<span><strong>已保存：</strong>实验数据可在报告页查看。</span>');
@@ -1070,9 +1198,9 @@ document.getElementById('save-report').addEventListener('click', () => {
 
 document.querySelectorAll('[data-view]').forEach((button) => {
   button.addEventListener('click', () => {
-    camera.position.set(0, 3.2, 12);
-    controls.target.set(0, 1.0, 0);
-    controls.update();
+    userAdjustedCamera = false;
+    applyDefaultCameraView();
+    if (button.dataset.view === 'reset') resetDetectorCard();
   });
 });
 
@@ -1095,13 +1223,27 @@ function moveActiveDrag(event) {
   if (!raycaster.ray.intersectPlane(railDragPlane, dragPoint)) return;
 
   if (activeDrag.userData.dragInput) {
-    const cm = railXToSnappedCm(dragPoint.x, activeDrag.userData.dragMin, activeDrag.userData.dragMax);
-    activeDrag.userData.dragInput.value = String(cm);
+    let dragMin = activeDrag.userData.dragMin;
+    let dragMax = activeDrag.userData.dragMax;
+    if (activeDrag.userData.key === 'source') {
+      dragMax = Math.min(dragMax, Number(collimatorInput.value) - 1);
+    }
+    if (activeDrag.userData.key === 'collimator') {
+      dragMin = Math.max(dragMin, Number(objectInput.value) + 1);
+    }
+    const cm = railXToSnappedCm(dragPoint.x, dragMin, dragMax);
+    const dragInput = activeDrag.userData.dragInput;
+    const changed = dragInput.value !== String(cm);
+    dragInput.value = String(cm);
     activeDrag.position.x = cmToX(cm);
+    if (changed) {
+      activeDrag.userData.dragChanged = true;
+      dragInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
   } else {
     activeDrag.position.x = clamp(dragPoint.x, -7.5, 8.5);
   }
-  updateExperiment(true);
+  if (!activeDrag.userData.dragInput) updateExperiment(true);
 }
 
 renderer.domElement.addEventListener('pointerdown', (event) => {
@@ -1111,6 +1253,7 @@ renderer.domElement.addEventListener('pointerdown', (event) => {
   const railX = raycaster.ray.intersectPlane(railDragPlane, dragPoint) ? dragPoint.x : Number.NaN;
   activeDrag = selectDragTargetFromHits(hits, railX) || selectNearestDragTarget(draggable, railX);
   if (activeDrag) {
+    activeDrag.userData.dragChanged = false;
     event.preventDefault();
     renderer.domElement.setPointerCapture(event.pointerId);
     controls.enabled = false;
@@ -1123,21 +1266,206 @@ window.addEventListener('pointermove', (event) => {
 });
 
 function endActiveDrag(event) {
+  const dragInput = activeDrag?.userData.dragInput;
+  const dragChanged = activeDrag?.userData.dragChanged === true;
   if (activeDrag && renderer.domElement.hasPointerCapture?.(event.pointerId)) {
     renderer.domElement.releasePointerCapture(event.pointerId);
   }
   activeDrag = null;
   controls.enabled = true;
+  if (dragInput && dragChanged) dragInput.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 window.addEventListener('pointerup', endActiveDrag);
 window.addEventListener('pointercancel', endActiveDrag);
+
+function clampDetectorCardPosition(left, top) {
+  if (!detectorCard) return;
+  const edge = 8;
+  const maxLeft = Math.max(edge, mount.clientWidth - detectorCard.offsetWidth - edge);
+  const maxTop = Math.max(edge, mount.clientHeight - detectorCard.offsetHeight - edge);
+  detectorCard.style.left = `${clamp(left, edge, maxLeft)}px`;
+  detectorCard.style.top = `${clamp(top, edge, maxTop)}px`;
+  detectorCard.style.right = 'auto';
+  detectorCard.style.bottom = 'auto';
+}
+
+function setDetectorCardWidth(width) {
+  if (!detectorCard) return;
+  const edge = 8;
+  const maximum = Math.max(180, Math.min(440, mount.clientWidth - edge * 2));
+  const minimum = Math.min(210, maximum);
+  detectorCard.style.width = `${clamp(width, minimum, maximum)}px`;
+  detectorCard.dataset.resized = 'true';
+  clampDetectorCardPosition(detectorCard.offsetLeft, detectorCard.offsetTop);
+}
+
+function setDetectorCardCollapsed(collapsed) {
+  if (!detectorCard || !detectorCardToggle) return;
+  detectorCard.classList.toggle('is-collapsed', collapsed);
+  detectorCardToggle.setAttribute('aria-expanded', String(!collapsed));
+  detectorCardToggle.setAttribute('aria-label', collapsed ? '展开光斑显示' : '收起光斑显示');
+  detectorCardToggle.title = collapsed ? '展开光斑显示' : '收起光斑显示';
+  detectorCardToggle.textContent = collapsed ? '⌄' : '⌃';
+  requestAnimationFrame(() => {
+    clampDetectorCardPosition(detectorCard.offsetLeft, detectorCard.offsetTop);
+    if (!collapsed && lastDetectorFrame) {
+      drawDetectorSpot(lastDetectorFrame.spot, lastDetectorFrame.result);
+    }
+  });
+}
+
+function resetDetectorCard() {
+  if (!detectorCard) return;
+  delete detectorCard.dataset.dragged;
+  delete detectorCard.dataset.resized;
+  detectorCard.classList.remove('is-dragging', 'is-resizing');
+  detectorCard.style.removeProperty('left');
+  detectorCard.style.removeProperty('top');
+  detectorCard.style.removeProperty('right');
+  detectorCard.style.removeProperty('bottom');
+  detectorCard.style.removeProperty('width');
+  setDetectorCardCollapsed(true);
+}
+
+function initializeDetectorCardDrag() {
+  if (!detectorCard || !detectorCardHandle) return;
+
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+  let dragging = false;
+
+  detectorCardHandle.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0 || event.target.closest('button')) return;
+    const mountRect = mount.getBoundingClientRect();
+    const cardRect = detectorCard.getBoundingClientRect();
+    dragging = true;
+    dragOffsetX = event.clientX - cardRect.left;
+    dragOffsetY = event.clientY - cardRect.top;
+    detectorCard.dataset.dragged = 'true';
+    detectorCard.classList.add('is-dragging');
+    clampDetectorCardPosition(cardRect.left - mountRect.left, cardRect.top - mountRect.top);
+    detectorCardHandle.setPointerCapture(event.pointerId);
+    event.preventDefault();
+    event.stopPropagation();
+  });
+
+  window.addEventListener('pointermove', (event) => {
+    if (!dragging) return;
+    const mountRect = mount.getBoundingClientRect();
+    clampDetectorCardPosition(
+      event.clientX - mountRect.left - dragOffsetX,
+      event.clientY - mountRect.top - dragOffsetY
+    );
+    event.preventDefault();
+  });
+
+  function stopDetectorCardDrag(event) {
+    if (!dragging) return;
+    dragging = false;
+    detectorCard.classList.remove('is-dragging');
+    if (detectorCardHandle.hasPointerCapture?.(event.pointerId)) {
+      detectorCardHandle.releasePointerCapture(event.pointerId);
+    }
+  }
+
+  window.addEventListener('pointerup', stopDetectorCardDrag);
+  window.addEventListener('pointercancel', stopDetectorCardDrag);
+  detectorCardHandle.addEventListener('keydown', (event) => {
+    if (event.target.closest('button')) return;
+    const movement = event.shiftKey ? 12 : 4;
+    const direction = {
+      ArrowLeft: [-movement, 0],
+      ArrowRight: [movement, 0],
+      ArrowUp: [0, -movement],
+      ArrowDown: [0, movement]
+    }[event.key];
+    if (!direction) return;
+    const mountRect = mount.getBoundingClientRect();
+    const cardRect = detectorCard.getBoundingClientRect();
+    detectorCard.dataset.dragged = 'true';
+    clampDetectorCardPosition(
+      cardRect.left - mountRect.left + direction[0],
+      cardRect.top - mountRect.top + direction[1]
+    );
+    event.preventDefault();
+  });
+
+  detectorCardToggle?.addEventListener('click', (event) => {
+    setDetectorCardCollapsed(!detectorCard.classList.contains('is-collapsed'));
+    event.stopPropagation();
+  });
+
+  if (detectorResizeHandle) {
+    let resizing = false;
+    let resizeStartX = 0;
+    let resizeStartWidth = 0;
+
+    detectorResizeHandle.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0 || detectorCard.classList.contains('is-collapsed')) return;
+      resizing = true;
+      resizeStartX = event.clientX;
+      resizeStartWidth = detectorCard.getBoundingClientRect().width;
+      detectorCard.classList.add('is-resizing');
+      detectorResizeHandle.setPointerCapture(event.pointerId);
+      event.preventDefault();
+      event.stopPropagation();
+    });
+
+    window.addEventListener('pointermove', (event) => {
+      if (!resizing) return;
+      setDetectorCardWidth(resizeStartWidth + event.clientX - resizeStartX);
+      event.preventDefault();
+    });
+
+    function stopDetectorResize(event) {
+      if (!resizing) return;
+      resizing = false;
+      detectorCard.classList.remove('is-resizing');
+      if (detectorResizeHandle.hasPointerCapture?.(event.pointerId)) {
+        detectorResizeHandle.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    window.addEventListener('pointerup', stopDetectorResize);
+    window.addEventListener('pointercancel', stopDetectorResize);
+    detectorResizeHandle.addEventListener('keydown', (event) => {
+      if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+      const direction = event.key === 'ArrowRight' ? 1 : -1;
+      setDetectorCardWidth(detectorCard.getBoundingClientRect().width + direction * (event.shiftKey ? 24 : 8));
+      event.preventDefault();
+    });
+  }
+}
+
+initializeDetectorCardDrag();
+resetDetectorCard();
+
+function syncLabPanelToCanvas() {
+  if (!labLayout || !mount) return;
+  const panel = labLayout.querySelector('.lab-panel');
+  if (!panel) return;
+  const panelRect = panel.getBoundingClientRect();
+  const canvasRect = mount.getBoundingClientRect();
+  const currentPanelOffset = Number.parseFloat(window.getComputedStyle(panel).marginTop) || 0;
+  const panelBaseTop = panelRect.top - currentPanelOffset;
+  labLayout.style.setProperty('--lab-panel-canvas-offset', `${Math.max(0, canvasRect.top - panelBaseTop)}px`);
+  labLayout.style.setProperty('--experiment-canvas-height', `${Math.max(1, canvasRect.height)}px`);
+}
 
 function resize() {
   const rect = mount.getBoundingClientRect();
   renderer.setSize(rect.width, rect.height);
   camera.aspect = rect.width / rect.height;
   camera.updateProjectionMatrix();
+  if (!userAdjustedCamera) applyDefaultCameraView();
+  syncLabPanelToCanvas();
+  if (detectorCard?.dataset.resized === 'true') {
+    setDetectorCardWidth(detectorCard.getBoundingClientRect().width);
+  }
+  if (detectorCard?.dataset.dragged === 'true') {
+    clampDetectorCardPosition(detectorCard.offsetLeft, detectorCard.offsetTop);
+  }
 }
 
 window.addEventListener('resize', () => {
@@ -1146,6 +1474,19 @@ window.addEventListener('resize', () => {
 
 resize();
 updateExperiment(true);
+
+if (window.ResizeObserver) {
+  const layoutObserver = new ResizeObserver(() => syncLabPanelToCanvas());
+  layoutObserver.observe(mount);
+  if (detectorSpotCanvas) {
+    const detectorObserver = new ResizeObserver(() => {
+      if (!detectorCard?.classList.contains('is-collapsed') && lastDetectorFrame) {
+        drawDetectorSpot(lastDetectorFrame.spot, lastDetectorFrame.result);
+      }
+    });
+    detectorObserver.observe(detectorSpotCanvas);
+  }
+}
 
 function animate() {
   updateExperiment();

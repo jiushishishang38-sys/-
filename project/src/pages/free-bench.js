@@ -65,7 +65,7 @@ export async function mountFreeBench(host) {
               </details>
             `).join('')}
           </div>
-          <canvas id="free-optics-2d" width="1200" height="560" aria-label="二维几何光学自由模拟画布"></canvas>
+          <canvas id="free-optics-2d" width="1200" height="560" role="img" aria-label="二维几何光学自由模拟画布">二维几何光学自由模拟画布</canvas>
         </div>
         <details class="free-3d-details">
           <summary>空间光具座预览</summary>
@@ -120,7 +120,7 @@ export async function mountFreeBench(host) {
               <option value="4">4x</option>
             </select>
           </div>
-          <canvas id="spot-magnifier" width="256" height="256"></canvas>
+          <canvas id="spot-magnifier" width="256" height="256" role="img" aria-label="自由搭建模式光斑放大显示">等待光线命中光屏或探测器</canvas>
           <div class="spot-readout" id="spot-readout">等待光线命中光屏或探测器</div>
         </details>
         <details class="tool-section tool-accordion">
@@ -155,6 +155,8 @@ export async function mountFreeBench(host) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.domElement.setAttribute('role', 'img');
+  renderer.domElement.setAttribute('aria-label', '自由搭建模式三维光具座');
   mount.appendChild(renderer.domElement);
 
   const scene3d = new THREE.Scene();
