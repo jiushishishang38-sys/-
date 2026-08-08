@@ -1,7 +1,7 @@
 import {
-  classifyFocusClarity,
   EYES,
-} from "../optics.js?v=teaching-lens-3";
+  evaluateExperiment,
+} from "../optics.js?v=teaching-lens-4";
 
 const modelTruth = Object.freeze({
   A: {
@@ -183,6 +183,10 @@ function createRecord(eyeId = "A") {
 
 export const experimentRecord = createRecord(eyeInput?.value);
 
+function isAstigmatismRecognitionOnly(eyeId = experimentRecord.eyeModel) {
+  return eyeId === "S";
+}
+
 function replaceRecord(nextRecord) {
   Object.keys(experimentRecord).forEach((key) => delete experimentRecord[key]);
   Object.assign(experimentRecord, nextRecord);
@@ -297,6 +301,13 @@ function restoreDraft() {
           (adjustment.bestPosition - Number(adjustment.initialPosition)).toFixed(2),
         );
       }
+
+      if (isAstigmatismRecognitionOnly(saved.eyeModel)) {
+        experimentRecord.observation.focusPosition = "";
+        adjustment.measurements = [];
+        adjustment.bestPosition = null;
+        adjustment.offset = null;
+      }
     }
   } catch {
     safeStorageRemove(DRAFT_KEY);
@@ -340,7 +351,7 @@ function notebookTemplate() {
             <strong>模拟眼 <span id="record-eye-id">D</span></strong>
           </div>
           <div class="record-eye-model-box" id="record-eye-model-box"></div>
-          <p class="record-step-note">安装完成后，调节像屏寻找该模型的最佳成像位置。</p>
+          <p class="record-step-note" id="record-eye-step-note">安装完成后，调节像屏寻找该模型的最佳成像位置。</p>
         </div>
       </details>
 
@@ -465,7 +476,7 @@ function notebookTemplate() {
           <div class="record-final-grid">
             <div><span>模拟眼</span><strong id="record-final-eye">—</strong></div>
             <div><span>屈光类型</span><strong id="record-final-diagnosis">—</strong></div>
-            <div><span>最佳矫正镜片</span><strong id="record-final-lens">—</strong></div>
+            <div id="record-final-lens-item"><span>最佳矫正镜片</span><strong id="record-final-lens">—</strong></div>
           </div>
           <div class="record-result-controls" id="record-result-controls" aria-label="实时计算结果"></div>
           <p class="record-complete-banner" id="record-complete-banner" hidden>✓ 实验完成，过程数据已形成完整记录。</p>
@@ -497,9 +508,22 @@ function setStepState(stepNumber, state, label) {
   if (stateElement) stateElement.textContent = label;
 }
 
+function setElementHidden(element, hidden) {
+  if (!element) return;
+  element.hidden = hidden;
+  if (hidden) {
+    element.style.setProperty("display", "none", "important");
+  } else {
+    element.style.removeProperty("display");
+  }
+}
+
 function observationIsCorrect() {
   const truth = modelTruth[experimentRecord.eyeModel];
   const observation = experimentRecord.observation;
+  if (isAstigmatismRecognitionOnly()) {
+    return observation.diagnosis === truth.diagnosis;
+  }
   return (
     observationIsReady() &&
     observation.focusPosition === truth.focus &&
@@ -514,24 +538,33 @@ function screenIsAtDReference() {
 }
 
 function observationIsReady() {
+  if (isAstigmatismRecognitionOnly()) return true;
   return retinaPositionIsComplete() && screenIsAtDReference();
 }
 
 function updateStepOne() {
   const eyeId = experimentRecord.eyeModel;
   root.querySelector("#record-eye-id").textContent = eyeId;
+  root.querySelector("#record-eye-step-note").textContent = isAstigmatismRecognitionOnly()
+    ? "S 眼只需观察不同方向的成像差异并判断是否为散光，无需测量焦距。"
+    : "安装完成后，调节像屏寻找该模型的最佳成像位置。";
   setStepState(1, "complete", "✓ 已安装");
 }
 
 function updateObservationUI() {
   const observation = experimentRecord.observation;
+  const recognitionOnly = isAstigmatismRecognitionOnly();
   const measurementsComplete = retinaPositionIsComplete();
   const ready = observationIsReady();
   const observationStep = root.querySelector('[data-record-step="3"]');
   const referenceButton = root.querySelector("#record-move-to-d-reference");
+  const referencePanel = root.querySelector(".record-reference-position");
+  const focusFieldset = root.querySelector('input[name="record-focus"]')?.closest(".record-fieldset");
+  setElementHidden(referencePanel, recognitionOnly);
+  setElementHidden(focusFieldset, recognitionOnly);
   root.querySelectorAll('input[name="record-focus"]').forEach((input) => {
     input.checked = input.value === observation.focusPosition;
-    input.disabled = !ready;
+    input.disabled = recognitionOnly || !ready;
   });
   root.querySelectorAll('input[name="record-diagnosis"]').forEach((input) => {
     input.checked = input.value === observation.diagnosis;
@@ -544,8 +577,28 @@ function updateObservationUI() {
     : "移至 D 眼最佳位置";
 
   const feedback = root.querySelector("#record-observation-feedback");
-  const allAnswered = observation.focusPosition && observation.diagnosis;
+  const allAnswered = recognitionOnly
+    ? Boolean(observation.diagnosis)
+    : observation.focusPosition && observation.diagnosis;
   feedback.classList.remove("is-success", "is-error");
+
+  if (recognitionOnly) {
+    if (!allAnswered) {
+      feedback.textContent = "请观察不同方向的光线与光斑形状，判断该模型是否为散光眼。";
+      setStepState(3, "pending", "等待判断");
+      return;
+    }
+    if (observationIsCorrect()) {
+      feedback.textContent = "✓ 判断正确：S 眼为散光眼，无需测量或计算焦距。";
+      feedback.classList.add("is-success");
+      setStepState(3, "complete", "✓ 判断正确");
+      return;
+    }
+    feedback.textContent = "× 判断不正确，请重新观察不同方向的聚焦差异。";
+    feedback.classList.add("is-error");
+    setStepState(3, "error", "需复查");
+    return;
+  }
 
   if (!measurementsComplete) {
     feedback.textContent = "请先完成像屏调节，再记录焦点位置与屈光判断。";
@@ -585,11 +638,17 @@ function updateObservationUI() {
 }
 
 function clarityAtPosition(position) {
-  const truth = modelTruth[experimentRecord.eyeModel];
-  return classifyFocusClarity(Number(position) - truth.bestRetina);
+  return evaluateExperiment({
+    eyeId: experimentRecord.eyeModel,
+    screenCm: Number(position),
+    lensType: "none",
+    lensPower: 0,
+    cylinderAngle: Number(cylinderInput?.defaultValue) || 20,
+  }).clarity;
 }
 
 function retinaPositionIsComplete() {
+  if (isAstigmatismRecognitionOnly()) return true;
   const adjustment = experimentRecord.retinaAdjustment;
   return (
     adjustment.measurements.length === 3
@@ -647,6 +706,15 @@ function syncRetinaFromExperiment({ commit = false, confirm = false } = {}) {
 }
 
 function updateRetinaUI() {
+  const recognitionOnly = isAstigmatismRecognitionOnly();
+  const screenStage = root.querySelector('[data-record-step="2"]');
+  setElementHidden(screenStage, recognitionOnly);
+  if (recognitionOnly) {
+    if (recordMeasurementButton) recordMeasurementButton.disabled = true;
+    setStepState(2, "complete", "无需测量");
+    return;
+  }
+
   const adjustment = experimentRecord.retinaAdjustment;
   const current = Number(adjustment.currentPosition);
   const clarity = clarityAtPosition(current);
@@ -698,6 +766,10 @@ function updateRetinaUI() {
 function renderLensTrials() {
   updateLensWorkflow();
   const tbody = root.querySelector("#record-lens-trials");
+  if (isAstigmatismRecognitionOnly()) {
+    setStepState(4, "complete", "无需矫正");
+    return;
+  }
   const workflowReady = retinaPositionIsComplete() && observationIsCorrect();
   if (!experimentRecord.lensTrial.length) {
     tbody.innerHTML = '<tr><td class="record-empty-row" colspan="3">选择镜片后，点击“安装并记录”</td></tr>';
@@ -725,6 +797,7 @@ function renderLensTrials() {
 }
 
 function experimentIsComplete() {
+  if (isAstigmatismRecognitionOnly()) return observationIsCorrect();
   return (
     observationIsCorrect() &&
     retinaPositionIsComplete() &&
@@ -735,13 +808,20 @@ function experimentIsComplete() {
 function updateFinalUI() {
   const complete = experimentIsComplete();
   const truth = modelTruth[experimentRecord.eyeModel];
+  const recognitionOnly = isAstigmatismRecognitionOnly();
   root.querySelector("#record-final-eye").textContent = `模拟眼 ${experimentRecord.eyeModel}`;
   root.querySelector("#record-final-diagnosis").textContent = complete ? truth.diagnosisLabel : "—";
+  setElementHidden(root.querySelector("#record-final-lens-item"), recognitionOnly);
+  setElementHidden(root.querySelector("#record-result-controls"), recognitionOnly);
   root.querySelector("#record-final-lens").textContent = complete
-    ? experimentRecord.finalResult.lensLabel
+    ? recognitionOnly
+      ? "本实验不要求"
+      : experimentRecord.finalResult.lensLabel
     : "—";
   root.querySelector("#record-complete-banner").hidden = !complete;
-  const pendingLabel = !retinaPositionIsComplete()
+  const pendingLabel = recognitionOnly
+    ? "等待判断"
+    : !retinaPositionIsComplete()
     ? "等待调焦"
     : !observationIsReady()
       ? "等待基准复位"
@@ -754,6 +834,11 @@ function updateFinalUI() {
 
   if (complete && !experimentRecord.finalResult.completedAt) {
     experimentRecord.finalResult.diagnosis = truth.diagnosis;
+    if (recognitionOnly) {
+      experimentRecord.finalResult.lensPower = null;
+      experimentRecord.finalResult.lensLabel = "本实验不要求";
+      experimentRecord.finalResult.success = true;
+    }
     experimentRecord.finalResult.completedAt = new Date().toISOString();
     logAction("complete_experiment", {
       eyeModel: experimentRecord.eyeModel,
@@ -863,6 +948,12 @@ function updateLensWorkflow() {
   const workflowReady = retinaPositionIsComplete() && observationIsCorrect();
   const corrected = experimentRecord.finalResult.success && workflowReady;
   const correctionStep = root.querySelector('[data-record-step="4"]');
+  const recognitionOnly = isAstigmatismRecognitionOnly();
+  setElementHidden(correctionStep, recognitionOnly);
+  if (recognitionOnly) {
+    setStepState(4, "complete", "无需矫正");
+    return;
+  }
 
   workflow.dataset.state = corrected ? "complete" : lensBoxOpened ? "open" : "closed";
   workspace.hidden = !lensBoxOpened;
@@ -1004,11 +1095,14 @@ function actionDescription(action) {
 function reportBody() {
   const record = experimentRecord;
   const truth = modelTruth[record.eyeModel];
+  const recognitionOnly = isAstigmatismRecognitionOnly(record.eyeModel);
   const observation = record.observation;
   const adjustment = record.retinaAdjustment;
-  const finalLens = record.finalResult.lensLabel || "未完成";
+  const finalLens = recognitionOnly ? "本实验不要求" : record.finalResult.lensLabel || "未完成";
   const status = experimentIsComplete() ? "实验完成" : "实验尚未完成";
-  const trialRows = record.lensTrial.length
+  const trialRows = recognitionOnly
+    ? '<tr><td colspan="4">S 眼仅进行散光判断，不要求矫正镜片实验</td></tr>'
+    : record.lensTrial.length
     ? record.lensTrial.map((trial, index) => `
         <tr>
           <td>${index + 1}</td>
@@ -1038,7 +1132,9 @@ function reportBody() {
       </div>
 
       <h2>一、实验目的</h2>
-      <p>通过模拟眼模型观察屈光系统成像，判断焦点与视网膜的相对位置；通过移动视网膜寻找最清晰像，并选择合适的矫正镜片，掌握近视、远视与散光的实验判别和矫正方法。</p>
+      <p>${recognitionOnly
+        ? "通过观察 S 模拟眼不同方向的光线和光斑特征，识别并判断散光眼。"
+        : "通过模拟眼模型观察屈光系统成像，判断焦点与视网膜的相对位置；通过移动视网膜寻找最清晰像，并选择合适的矫正镜片，掌握近视、远视的实验判别和矫正方法。"}</p>
 
       <h2>二、实验原理</h2>
       <p>平行光经模拟眼屈光系统后，焦点落在视网膜上时成像清晰；焦点位于视网膜前为近视状态，需用凹透镜矫正；焦点位于视网膜后为远视状态，需用凸透镜矫正；不同方向焦点不重合时表现为散光，通常使用柱面镜矫正。</p>
@@ -1047,9 +1143,11 @@ function reportBody() {
       <ol>
         <li>调节点光源与双凸透镜，使光源位于透镜焦点处并获得平行光。</li>
         <li>从模拟眼模型盒选择模型并安装到光具座。</li>
-        <li>移动视网膜像屏，寻找清晰范围并记录实际位置与位移。</li>
-        <li>根据光路与成像现象记录焦点位置，判断模拟眼屈光状态。</li>
-        <li>依次尝试矫正镜片，记录成像效果并确定最佳矫正方案。</li>
+        ${recognitionOnly
+          ? "<li>观察不同方向的光线会聚与光斑形状差异，判断该模型是否为散光眼。</li>"
+          : `<li>移动视网膜像屏，寻找清晰范围并记录实际位置与位移。</li>
+             <li>根据光路与成像现象记录焦点位置，判断模拟眼屈光状态。</li>
+             <li>依次尝试矫正镜片，记录成像效果并确定最佳矫正方案。</li>`}
       </ol>
       <table class="report-process-table">
         <caption>实验过程操作记录</caption>
@@ -1064,7 +1162,7 @@ function reportBody() {
         <tbody><tr>
           <td>${escapeHtml(record.eyeModel)}</td>
           <td>${labels.clarity[observation.clarity] || "未记录"}</td>
-          <td>${labels.focus[observation.focusPosition] || "未记录"}</td>
+          <td>${recognitionOnly ? "不要求记录" : labels.focus[observation.focusPosition] || "未记录"}</td>
           <td>${labels.diagnosis[observation.diagnosis] || "未记录"}</td>
         </tr></tbody>
       </table>
@@ -1073,9 +1171,9 @@ function reportBody() {
         <thead><tr><th>模拟眼</th><th>初始位置</th><th>最佳位置</th><th>偏移</th></tr></thead>
         <tbody><tr>
           <td>${escapeHtml(record.eyeModel)}</td>
-          <td>${Number(adjustment.initialPosition).toFixed(2)} cm</td>
-          <td>${adjustment.bestPosition === null ? "未记录" : `${Number(adjustment.bestPosition).toFixed(2)} cm`}</td>
-          <td>${adjustment.offset === null ? "未记录" : formatSigned(adjustment.offset, 2, " cm")}</td>
+          <td>${recognitionOnly ? "不要求" : `${Number(adjustment.initialPosition).toFixed(2)} cm`}</td>
+          <td>${recognitionOnly ? "不要求" : adjustment.bestPosition === null ? "未记录" : `${Number(adjustment.bestPosition).toFixed(2)} cm`}</td>
+          <td>${recognitionOnly ? "不要求" : adjustment.offset === null ? "未记录" : formatSigned(adjustment.offset, 2, " cm")}</td>
         </tr></tbody>
       </table>
       <table>
@@ -1093,7 +1191,9 @@ function reportBody() {
       </div>
 
       <h2>六、误差分析</h2>
-      <p>误差可能来自视网膜位置读数分辨率、清晰度判断的主观性、镜片焦度调节步长、光具座元件未完全共轴以及模拟眼模型对真实眼球结构的简化。可通过减小调节步长、重复寻找最清晰位置、记录多次镜片尝试并校准元件共轴性来降低误差。</p>
+      <p>${recognitionOnly
+        ? "散光判断可能受到光斑形状观察主观性、光具座元件未完全共轴以及模型简化的影响，可通过对比不同方向的光线与光斑特征进行复核。"
+        : "误差可能来自视网膜位置读数分辨率、清晰度判断的主观性、镜片焦度调节步长、光具座元件未完全共轴以及模拟眼模型对真实眼球结构的简化。可通过减小调节步长、重复寻找最清晰位置、记录多次镜片尝试并校准元件共轴性来降低误差。"}</p>
     </article>
   `;
 }
@@ -1266,7 +1366,9 @@ if (root && reportModal && eyeInput && lensTypeInput && lensPowerInput && cylind
     updateObservationUI();
     updateLensWorkflow();
     updateFinalUI();
-    if (observationIsCorrect()) advanceToStep(4);
+    if (observationIsCorrect()) {
+      advanceToStep(isAstigmatismRecognitionOnly() ? 5 : 4);
+    }
   });
 
   screenInput?.addEventListener("input", () => {

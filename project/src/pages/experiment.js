@@ -28,7 +28,6 @@ import {
 import {
   clearAllRowData,
   clearRowData,
-  classifyFocusClarity,
   EYES,
   evaluateExperiment,
   loadRows,
@@ -38,7 +37,7 @@ import {
   traceTeachingRays,
   updateRowData,
   updateRowWithMeasurement
-} from '../optics.js?v=teaching-lens-3';
+} from '../optics.js?v=teaching-lens-4';
 import { attachOpticsModel, setOpticsModel } from '../model-assets.js';
 
 const mount = document.getElementById('experiment-canvas');
@@ -76,6 +75,7 @@ const labLayout = document.querySelector('.lab-layout');
 let rows = loadRows();
 let editingRowId = '';
 let lastDetectorFrame = null;
+let activeEyeId = eyeInput.value;
 
 function renderExperimentTable() {
   renderDataTable(table, rows, { editable: true, editingId: editingRowId });
@@ -398,10 +398,12 @@ function drawDetectorSpot(spot, result) {
   const cx = width / 2;
   const cy = height / 2;
   const maxPixelRadius = Math.min(width, height) * 0.42;
-  const focusClarity = classifyFocusClarity(result?.screenError);
+  const focusClarity = result?.clarity ?? spot.focusClarity ?? 'blur';
   const isBestFocus = focusClarity === 'clear'
     && (!result?.eye?.astigmatic || result?.isCorrected);
-  const focusedScale = isBestFocus ? 0.58 : 1;
+  // The astigmatism residual already changes the S-eye spot size and shape.
+  // Avoid shrinking it a second time after the cylinder lens is installed.
+  const focusedScale = isBestFocus && !result?.eye?.astigmatic ? 0.58 : 1;
   const minimumRadius = (isBestFocus ? 4.4 : 8) * ratio;
   const radius = Math.max(
     minimumRadius,
@@ -1006,6 +1008,14 @@ function updateLensValueReadouts() {
   }
 }
 
+function resetCorrectionSelection() {
+  lensTypeInput.value = 'none';
+  lensPowerInput.value = '0';
+  cylinderInput.value = cylinderInput.defaultValue || '20';
+  updateLensValueReadouts();
+  updateLensControls();
+}
+
 function applyRecommendedCorrection() {
   const result = evaluateExperiment({ eyeId: eyeInput.value, screenCm: Number(screenInput.value) });
   lensTypeInput.value = result.recommended.type;
@@ -1067,9 +1077,20 @@ function updateExperiment(force = false) {
   `;
 }
 
-[modeInput, eyeInput, screenInput, collimatorInput, objectInput, lensTypeInput, lensPowerInput, cylinderInput].forEach((input) => {
+[modeInput, screenInput, collimatorInput, objectInput, lensTypeInput, lensPowerInput, cylinderInput].forEach((input) => {
   input.addEventListener('input', () => updateExperiment(true));
 });
+
+function handleEyeSelection() {
+  const nextEyeId = eyeInput.value;
+  if (nextEyeId !== activeEyeId) {
+    activeEyeId = nextEyeId;
+    resetCorrectionSelection();
+  }
+  updateExperiment(true);
+}
+
+eyeInput.addEventListener('input', handleEyeSelection);
 
 [
   [screenValue, screenInput],
@@ -1112,10 +1133,7 @@ function updateExperiment(force = false) {
   });
 });
 
-eyeInput.addEventListener('change', () => {
-  applyRecommendedCorrection();
-  updateExperiment(true);
-});
+eyeInput.addEventListener('change', handleEyeSelection);
 
 document.getElementById('auto-correct').addEventListener('click', () => {
   applyRecommendedCorrection();
